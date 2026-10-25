@@ -41,6 +41,8 @@
   .navlinks a:hover { color: var(--text); }
 
   /* banner */
+  /* Pre-launch: hide what needs the public repo, show the follow CTA. */
+  body:not(.prelaunch) .pre, body.prelaunch .launch, body:not(.prelaunch) .banner { display: none !important; }
   .banner {
     max-width: 100%;
     display: inline-flex; gap: 8px; align-items: center; margin-top: 40px;
@@ -161,7 +163,8 @@
   }
 </style>
 </head>
-<body>
+<!-- Pre-launch: links point to X until the repo is public. On launch day, remove class="prelaunch". -->
+<body class="prelaunch">
 <div class="glow"></div>
 
 <div class="wrap">
@@ -171,7 +174,7 @@
       <a class="hide" href="#how">How it works</a>
       <a class="hide" href="#wrapped">Wrapped</a>
       <a href="#install">Install</a>
-      <a href="https://github.com/priyank-saarthios-ai/somedayx">GitHub</a>
+      <a class="launch" href="https://github.com/priyank-saarthios-ai/somedayx">GitHub</a>
     </div>
   </nav>
 
@@ -183,8 +186,10 @@
       <h1>For the X posts<br>you'll read <span class="soft">someday.</span></h1>
       <p class="lede">You've saved thousands of posts and never found one again. SomedayX searches every bookmark and like by <b>meaning</b>, even what's inside the images, from your Mac's menu bar.</p>
       <div class="ctas">
-        <a class="btn primary" href="#install">Install on your Mac</a>
-        <a class="btn ghost" href="https://github.com/priyank-saarthios-ai/somedayx">★ Star on GitHub</a>
+        <a class="btn primary launch" href="#install">Install on your Mac</a>
+        <a class="btn ghost launch" href="https://github.com/priyank-saarthios-ai/somedayx">★ Star on GitHub</a>
+        <a class="btn primary pre" href="https://x.com/priyankmmehta">Follow for the Nov 10 drop</a>
+        <a class="btn ghost pre" href="#how">See how it works</a>
       </div>
       <p class="fine">Free &amp; open source · 100% on your Mac · no account, no cloud, no tracking</p>
     </div>
@@ -250,7 +255,8 @@
     <div id="install">
       <div class="kicker">Install</div>
       <h2>One command.</h2>
-      <div class="term">
+      <p class="pre sub">Opens to everyone on <b style="color:var(--text)">Nov 10</b>. <a href="https://x.com/priyankmmehta" style="color:var(--blue)">Follow @priyankmmehta</a> to get it first.</p>
+      <div class="term launch">
         <div class="top"><span>Terminal</span><button class="copy" id="copy">copy</button></div>
 <pre id="cmd"><span class="c"># builds and opens SomedayX; the app walks you through the rest</span>
 git clone https://github.com/priyank-saarthios-ai/somedayx.git
