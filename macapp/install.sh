@@ -76,8 +76,11 @@ stop
 
 # From the Stash days: move data out of the code folder, keep app settings.
 (cd "$ROOT" && "$UV" run python -c "from somedayx.db import connect; connect()")
-if ! defaults read "$BUNDLE_ID" >/dev/null 2>&1 && defaults read com.xsearch.stash >/dev/null 2>&1; then
-  defaults export com.xsearch.stash - | defaults import "$BUNDLE_ID" -
+if defaults read com.xsearch.stash >/dev/null 2>&1; then
+  if ! defaults read "$BUNDLE_ID" >/dev/null 2>&1; then
+    defaults export com.xsearch.stash - | defaults import "$BUNDLE_ID" -
+  fi
+  defaults delete com.xsearch.stash  # carried over once; never again
 fi
 
 rm -rf "$APP"

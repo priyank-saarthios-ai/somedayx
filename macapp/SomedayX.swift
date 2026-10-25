@@ -735,8 +735,13 @@ final class Store: ObservableObject {
         scheduleSearch(delay: 0)
         Task {
             await loadStats()
-            // Updated from a version without local models: just set those up.
-            if step == nil, let b = brain, b.embed.state == "missing" {
+            if step == nil, !hasData, stats?.last_sync == nil {
+                // Nothing saved and never synced (say, the data folder was
+                // reset): the full onboarding, whatever the settings say.
+                step = .welcome
+                onWantsPanel()
+            } else if step == nil, let b = brain, b.embed.state == "missing" {
+                // Updated from a version without local models: just set those up.
                 brainOnly = true
                 useWriter = b.writer_on
                 step = .brain
