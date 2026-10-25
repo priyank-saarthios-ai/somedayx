@@ -1,0 +1,17 @@
+# Code only. Your data lives in ~/Library/Application Support/SomedayX;
+# these guard against any of it (or build output) landing in the repo.
+.venv/
+__pycache__/
+*.pyc
+macapp/build/
+.DS_Store
+
+# Personal data, if it ever ends up here (older versions kept it in data/)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.gguf
+browser-profile/
+token
+account.json

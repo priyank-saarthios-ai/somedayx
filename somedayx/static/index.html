@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SomedayX</title>
+<style>
+  :root {
+    --bg: #ffffff; --card: #ffffff; --text: #0f1419; --muted: #536471; --line: #eff3f4;
+    --accent: #1d9bf0; --accent-soft: #e8f5fd; --chip: #f0f0ec; --why: #fbf6e6; --why-line: #efe2b8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --card: #000000; --text: #e7e9ea; --muted: #71767b; --line: #2f3336;
+      --accent: #1d9bf0; --accent-soft: #0b2a40; --chip: #24282c; --why: #26231a; --why-line: #4a4228;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 0 10px; }
+  h1 { font-size: 18px; margin: 0 0 10px; font-weight: 650; }
+  h1 span { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 6px; }
+  .search { display: flex; gap: 8px; }
+  input[type=search] { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 11px 14px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--text); outline: none; }
+  input[type=search]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+  .seg button { font: inherit; font-size: 13px; padding: 5px 12px; border: 1px solid var(--line);
+    background: var(--card); color: var(--muted); cursor: pointer; }
+  .seg button:first-child { border-radius: 8px 0 0 8px; }
+  .seg button:last-child { border-radius: 0 8px 8px 0; }
+  .seg button + button { border-left: none; }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .filters input { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--card); color: var(--text); width: 130px; }
+  .filters label { font-size: 12px; color: var(--muted); }
+  .status { color: var(--muted); font-size: 13px; margin: 6px 0 4px; min-height: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 10px 0; }
+  .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .head { display: flex; gap: 10px; align-items: center; }
+  .head img { width: 36px; height: 36px; border-radius: 50%; flex: none; background: var(--chip); }
+  .who { min-width: 0; flex: 1; }
+  .who b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .who small { color: var(--muted); }
+  .badges { display: flex; gap: 4px; flex: none; }
+  .badge { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: var(--chip); color: var(--muted); }
+  .why { background: var(--why); border: 1px solid var(--why-line); border-radius: 8px; padding: 7px 10px;
+    font-size: 13.5px; margin: 10px 0 0; }
+  .why em { font-style: normal; color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .text { white-space: pre-wrap; word-wrap: break-word; margin: 10px 0 0; }
+  .text.clamp { display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+  .more { font: inherit; font-size: 13px; background: none; border: none; color: var(--accent); padding: 0; cursor: pointer; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .quote { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-top: 10px;
+    font-size: 14px; color: var(--muted); white-space: pre-wrap; max-height: 160px; overflow: hidden; }
+  .quote b { color: var(--text); font-weight: 600; }
+  .media { display: grid; gap: 6px; margin-top: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .media a { position: relative; display: block; }
+  .media img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+  .media .play { position: absolute; inset: auto 6px 6px auto; font-size: 11px; background: rgba(0,0,0,.65);
+    color: #fff; padding: 1px 6px; border-radius: 4px; }
+  .foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+  .tag { font: inherit; font-size: 12px; padding: 2px 9px; border-radius: 99px; background: var(--chip);
+    border: none; color: var(--muted); cursor: pointer; }
+  .tag:hover { color: var(--accent); }
+  .open { margin-left: auto; font-size: 13px; white-space: nowrap; }
+  .error { color: #f4212e; }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--muted); }
+  /* Compact layout inside the menu bar popover (?embed=1). */
+  body.embed .wrap { padding: 0 12px 40px; }
+  body.embed header { padding-top: 10px; }
+  body.embed h1 { font-size: 14px; margin-bottom: 8px; }
+  body.embed .card { padding: 12px 13px; }
+  body.embed .media img { height: 120px; }
+  @media (max-width: 520px) { .filters input { width: 110px; } .media img { height: 120px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>SomedayX <span id="count"></span></h1>
+    <form class="search" id="form">
+      <input type="search" id="q" placeholder="Search your saves · try from:handle has:video year:2025" autocomplete="off" autofocus>
+    </form>
+    <div class="filters">
+      <div class="seg" id="source">
+        <button type="button" data-v="" class="on">All</button><button type="button" data-v="bookmark">Bookmarks</button><button type="button" data-v="like">Likes</button>
+      </div>
+      <input id="author" placeholder="@author">
+      <label>from <input id="since" type="date"></label>
+      <label>to <input id="until" type="date"></label>
+    </div>
+    <div class="status" id="status"></div>
+  </header>
+  <main id="results"></main>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const state = { source: "", sel: -1 };
+
+function params() {
+  const p = new URLSearchParams();
+  const q = $("#q").value.trim();
+  if (q) p.set("q", q);
+  if (state.source) p.set("source", state.source);
+  for (const k of ["author", "since", "until"]) { const v = $("#" + k).value.trim(); if (v) p.set(k, v); }
+  return p;
+}
+
+// Post text with t.co links replaced by their real URLs. Built from text
+// nodes and <a> elements only, so post content can never inject HTML.
+function renderText(text, links, mediaTcos) {
+  const frag = document.createDocumentFragment();
+  const parts = text.split(/(https:\/\/t\.co\/\w+)/g);
+  for (const part of parts) {
+    if (!/^https:\/\/t\.co\//.test(part)) { frag.append(part); continue; }
+    if (mediaTcos.has(part)) continue;
+    const link = links[part];
+    const href = link ? link.url : part;
+    if (!/^https?:\/\//.test(href)) { frag.append(part); continue; }
+    const a = el("a", null, link && link.title ? link.title : href.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60));
+    a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.title = href;
+    frag.append(a);
+  }
+  return frag;
+}
+
+function card(r) {
+  const c = el("article", "card");
+  const head = el("div", "head");
+  const av = el("img"); av.alt = ""; av.loading = "lazy"; av.referrerPolicy = "no-referrer";
+  if (r.profile_image) av.src = r.profile_image;
+  const who = el("div", "who");
+  who.append(el("b", null, r.name || r.screen_name));
+  who.append(el("small", null, `@${r.screen_name} · ${new Date(r.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}`));
+  const badges = el("div", "badges");
+  if (r.is_bookmark) badges.append(el("span", "badge", "Bookmarked"));
+  if (r.is_like) badges.append(el("span", "badge", "Liked"));
+  head.append(av, who, badges);
+  c.append(head);
+
+  if (r.summary && r.matched_by.length) {
+    const why = el("div", "why", r.summary);
+    why.append(el("em", null, "· matched by " + r.matched_by.join(" + ")));
+    c.append(why);
+  }
+
+  const mediaTcos = new Set();
+  const text = (r.full_text || "").replace(/https:\/\/t\.co\/\w+\s*$/, (m) => { mediaTcos.add(m.trim()); return ""; });
+  const t = el("div", "text clamp");
+  t.append(renderText(text.trim(), r.links || {}, r.media.length ? mediaTcos : new Set()));
+  c.append(t);
+  requestAnimationFrame(() => {
+    if (t.scrollHeight > t.clientHeight + 4) {
+      const more = el("button", "more", "Show more");
+      more.onclick = () => { t.classList.remove("clamp"); more.remove(); };
+      t.after(more);
+    }
+  });
+
+  if (r.q_text) {
+    const q = el("div", "quote");
+    q.append(el("b", null, "@" + r.q_author + "  "), r.q_text);
+    c.append(q);
+  }
+
+  if (r.media.length) {
+    const m = el("div", "media");
+    for (const item of r.media) {
+      const a = el("a"); a.href = item.type === "photo" ? item.original : r.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      const img = el("img"); img.src = item.src; img.loading = "lazy"; img.alt = "";
+      a.append(img);
+      if (item.type !== "photo") a.append(el("span", "play", item.type === "video" ? "▶ video" : "GIF"));
+      m.append(a);
+    }
+    c.append(m);
+  }
+
+  const foot = el("div", "foot");
+  for (const tag of r.tags || []) {
+    const b = el("button", "tag", tag);
+    b.onclick = () => { $("#q").value = tag; run(); };
+    foot.append(b);
+  }
+  const open = el("a", "open", "Open on X ↗"); open.href = r.url; open.target = "_blank"; open.rel = "noopener noreferrer";
+  foot.append(open);
+  c.append(foot);
+  return c;
+}
+
+let seq = 0;
+async function run(push = true) {
+  const p = params();
+  if (push) history.replaceState(null, "", p.toString() ? "?" + p : location.pathname);
+  const my = ++seq;
+  $("#status").classList.remove("error");
+  $("#status").textContent = p.get("q") ? "Searching…" : "";
+  const t0 = performance.now();
+  let data;
+  try {
+    data = await (await fetch("/api/search?" + p)).json();
+  } catch (e) {
+    $("#status").textContent = "Search failed. Is the server still running?";
+    return;
+  }
+  if (my !== seq) return;
+  const ms = Math.round(performance.now() - t0);
+  $("#status").textContent = data.query
+    ? `${data.results.length} results in ${ms} ms`
+    : `Your latest ${state.source === "like" ? "likes" : state.source === "bookmark" ? "bookmarks" : "saves"}`;
+  const root = $("#results");
+  root.replaceChildren(...data.results.map(card));
+  if (!data.results.length) root.append(el("p", "status", "No results. Try searching for something else, or narrow it down with from:, is:, has: or year:."));
+  state.sel = -1;
+}
+
+let timer;
+$("#form").onsubmit = (e) => { e.preventDefault(); clearTimeout(timer); run(); };
+$("#q").oninput = () => { clearTimeout(timer); timer = setTimeout(run, 350); };
+for (const k of ["author", "since", "until"]) $("#" + k).onchange = () => run();
+function setSource(v) {
+  state.source = v;
+  for (const x of $("#source").children) x.classList.toggle("on", x.dataset.v === v);
+}
+$("#source").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  setSource(b.dataset.v);
+  run();
+};
+
+document.addEventListener("keydown", (e) => {
+  const typing = ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName);
+  if (e.key === "/" && !typing) { e.preventDefault(); $("#q").focus(); $("#q").select(); return; }
+  if (e.key === "Escape") { document.activeElement.blur(); return; }
+  const cards = [...document.querySelectorAll(".card")];
+  if (!cards.length || (typing && e.key !== "ArrowDown")) return;
+  if (e.key === "ArrowDown" || e.key === "j") state.sel = Math.min(state.sel + 1, cards.length - 1);
+  else if (e.key === "ArrowUp" || e.key === "k") state.sel = Math.max(state.sel - 1, 0);
+  else if (e.key === "Enter" && state.sel >= 0) { window.open(cards[state.sel].querySelector(".open").href, "_blank"); return; }
+  else return;
+  e.preventDefault();
+  document.activeElement.blur();
+  cards.forEach((c, i) => c.classList.toggle("sel", i === state.sel));
+  cards[state.sel].scrollIntoView({ block: "center", behavior: "smooth" });
+});
+
+if (new URLSearchParams(location.search).get("embed")) document.body.classList.add("embed");
+window.focusSearch = () => { const q = $("#q"); q.focus(); q.select(); };
+
+// Restore state from the URL so searches can be bookmarked and reloaded.
+const init = new URLSearchParams(location.search);
+$("#q").value = init.get("q") || "";
+for (const k of ["author", "since", "until"]) $("#" + k).value = init.get(k) || "";
+if (init.get("source")) setSource(init.get("source"));
+run(false);
+
+fetch("/api/stats").then((r) => r.json()).then((s) =>
+  $("#count").textContent = `${s.total.toLocaleString()} · ${s.bookmarks.toLocaleString()} bookmarks · ${s.likes.toLocaleString()} likes`);
+</script>
+</body>
+</html>
