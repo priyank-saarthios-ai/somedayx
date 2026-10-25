@@ -693,6 +693,8 @@ final class Store: ObservableObject {
     @Published var openAtLogin = true
     /// Posts found in lists already finished during this sync (onboarding counter).
     @Published var earlierFound = 0
+    /// Saves already in the pile when the running sync started.
+    @Published var pileAtStart = 0
     /// Onboarding choice: also write tl;drs with Gemma 4.
     @Published var useWriter = false
     /// Search ran on words only because the model isn't ready yet.
@@ -882,7 +884,10 @@ final class Store: ObservableObject {
             earlierFound += before?.progress?.new ?? 0
         }
         if before?.progress?.phase == "login" && s.progress?.phase != "login" { onLoggedIn() }
-        if before?.progress == nil && s.progress != nil { earlierFound = 0 }
+        if before?.progress == nil && s.progress != nil {
+            earlierFound = 0
+            pileAtStart = s.total
+        }
         // Follow syncs started elsewhere too, and refresh when one ends.
         if s.progress != nil { startPolling() } else if !syncing { stopPolling(refresh: before?.progress != nil) }
         withAnimation(Motion.spring()) { stats = s }
@@ -951,6 +956,7 @@ final class Store: ObservableObject {
     private func syncingChanged() {
         if syncing {
             earlierFound = 0
+            pileAtStart = stats?.total ?? 0
             startPolling()
         }
     }
@@ -2586,16 +2592,21 @@ struct SetupCard: View {
 
             if active {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    CountUp(value: Double(store.foundThisSync))
+                    CountUp(value: Double(store.pileAtStart + store.foundThisSync))
                         .font(.system(size: 46, weight: .black, design: .rounded)).foregroundStyle(X.text)
-                    Text("saves stashed").font(.system(size: 15, weight: .bold)).foregroundStyle(X.muted)
+                    Text("in your pile").font(.system(size: 15, weight: .bold)).foregroundStyle(X.muted)
                     Spacer()
-                    if let rate = rate(p) { Text(rate).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(X.muted) }
+                    Text(sub(p)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(X.muted)
+                        .contentTransition(.numericText())
                 }
                 .padding(.top, 10)
                 .animation(Motion.spring(0.5, 0.9), value: store.foundThisSync)
                 LiveBar(fraction: fraction(p)).padding(.top, 4)
-                LiveFeed(items: p?.recent ?? []).padding(.top, 14)
+                if let items = p?.recent, !items.isEmpty {
+                    LiveFeed(items: items).padding(.top, 14)
+                } else if ["bookmark", "like"].contains(p?.phase ?? "") {
+                    FeedPlaceholder().padding(.top, 14)
+                }
             }
 
             Spacer(minLength: 10)
@@ -2641,6 +2652,15 @@ struct SetupCard: View {
     func fraction(_ p: SyncProgress?) -> Double? {
         guard let t = p?.total, t > 0, ["articles", "write", "index"].contains(p?.phase ?? "") else { return nil }
         return Double(p?.done ?? 0) / Double(t)
+    }
+
+    /// "+128 this run · ≈ 96 a minute", or what it's doing before new ones show up.
+    func sub(_ p: SyncProgress?) -> String {
+        let found = store.foundThisSync
+        if found == 0, let seen = p?.seen, seen > 0, store.pileAtStart > 0 {
+            return "catching up to where it left off… \(seen.formatted()) checked"
+        }
+        return (["+\(found.formatted()) this run"] + [rate(p)].compactMap { $0 }).joined(separator: " · ")
     }
 
     func rate(_ p: SyncProgress?) -> String? {
@@ -2779,6 +2799,28 @@ struct LiveFeed: View {
             }
         }
         .animation(Motion.spring(0.4, 0.85), value: items)
+    }
+}
+
+/// Ghost rows where the live feed will be, until the first new post lands.
+struct FeedPlaceholder: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(0..<3, id: \.self) { i in
+                HStack(spacing: 9) {
+                    Circle().fill(X.field).frame(width: 22, height: 22)
+                    RoundedRectangle(cornerRadius: 4).fill(X.field).frame(width: 70, height: 9)
+                    RoundedRectangle(cornerRadius: 4).fill(X.field).frame(width: CGFloat(150 + i * 50), height: 9)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 8)
+                .background(RoundedRectangle(cornerRadius: 10).fill(X.bg.opacity(0.55)))
+                .opacity(1 - Double(i) * 0.25)
+            }
+            Text("new saves show up here as they're found").font(.system(size: 11.5)).foregroundStyle(X.muted)
+                .padding(.leading, 4)
+        }
+        .modifier(Shimmer())
     }
 }
 
