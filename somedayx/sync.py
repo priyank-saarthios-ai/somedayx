@@ -120,6 +120,10 @@ def run_sync(conn, headless: bool = False, notify: bool = False) -> int:
         return 2
     except Exception as e:
         traceback.print_exc()
+        if "has been closed" in str(e):  # the login window was closed
+            _status(state="stopped", message="The X login window was closed before the sync finished. "
+                                             "Everything collected so far is kept; sync again to continue.")
+            return 1
         _status(state="error", message=f"{type(e).__name__}: {e}"[:300])
         if notify:
             _notify("Sync didn't finish", f"{type(e).__name__}: {e}"[:200])

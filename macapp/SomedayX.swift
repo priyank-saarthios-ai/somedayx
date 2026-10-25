@@ -1938,6 +1938,7 @@ struct Footer: View {
             if p.paused == true { return "x asked us to slow down. back in a minute ☕️" }
             return "stashing \(p.phase!)s… \(store.foundThisSync.formatted()) new"
         case "fetch": return "grabbing links and images…"
+        case "articles": return "reading x articles… \(p.done ?? 0)/\(p.total ?? 0)"
         case "write":
             guard let t = p.total, t > 0 else { return "gemma is writing tl;drs…" }
             return "gemma is writing tl;drs… \(p.done ?? 0)/\(t)"
@@ -2124,7 +2125,7 @@ struct Connect: View {
 
     var body: some View {
         StepPage(title: "connect x",
-                 text: "somedayx opens its own chrome window. log in to x there once and you're set.") {
+                 text: "a chrome window opens just for logging in to x. once you're in, it closes by itself.") {
             VStack(alignment: .leading, spacing: 12) {
                 promise("lock.fill", "no servers, no accounts, no tracking. ever.")
                 promise("eye.fill", "read-only. it never posts, likes or follows.")
@@ -2315,7 +2316,7 @@ struct FirstSync: View {
         }
         if p?.paused == true { return "x asked us to slow down. back in a minute ☕️" }
         switch p?.phase {
-        case "login": return "use the chrome window that just opened. we'll take it from there."
+        case "login": return "use the chrome window that just opened. it closes by itself once you're in."
         case "bookmark", "like": return "the first sync scrolls your whole history. it can take a while for big collections. close this anytime, it keeps going."
         case "fetch": return "grabbing link titles and images so search can find them."
         case "write": return "gemma is writing tl;drs for your new posts."
@@ -2497,7 +2498,11 @@ struct HomeView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            StatsCard()
+            if store.syncing || store.stats?.total == 0 {
+                SetupCard()
+            } else {
+                StatsCard()
+            }
             VStack(spacing: 14) {
                 IndexCard()
                 QuickActions()
@@ -2519,6 +2524,105 @@ struct Card<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 16).fill(X.raised))
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(X.line))
+    }
+}
+
+/// While the first sync fills an empty library (or after one stopped):
+/// what's happening, live, and what to do about it.
+struct SetupCard: View {
+    @EnvironmentObject var store: Store
+
+    var body: some View {
+        let p = store.progress
+        VStack(alignment: .leading, spacing: 0) {
+            Label(store.syncing ? "setting up" : "almost there", systemImage: store.syncing ? "arrow.triangle.2.circlepath" : "pause.circle")
+                .font(.system(size: 12.5, weight: .bold)).foregroundStyle(X.blue)
+            Text(title(p)).font(.system(size: 26, weight: .heavy)).foregroundStyle(X.text).padding(.top, 10)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(detail(p)).font(.system(size: 14)).foregroundStyle(X.muted).padding(.top, 6)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if store.syncing {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    CountUp(value: Double(store.foundThisSync))
+                        .font(.system(size: 54, weight: .black, design: .rounded)).foregroundStyle(X.text)
+                    Text("saves found").font(.system(size: 16, weight: .bold)).foregroundStyle(X.muted)
+                }
+                .padding(.top, 14)
+                .animation(Motion.spring(0.5, 0.9), value: store.foundThisSync)
+                HStack(spacing: -8) {
+                    ForEach(Array((p?.avatars ?? []).suffix(10)), id: \.self) { a in
+                        Avatar(url: biggerAvatar(a), size: 30)
+                            .overlay(Circle().strokeBorder(X.raised, lineWidth: 2))
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .frame(height: 32)
+                .animation(Motion.spring(), value: p?.avatars ?? [])
+                ProgressView().progressViewStyle(.linear).tint(X.blue).padding(.top, 14)
+            }
+
+            Spacer(minLength: 12)
+            if store.syncing {
+                note(p?.phase == "login" ? "🪟" : "💤",
+                     p?.phase == "login"
+                        ? "log in to x in the chrome window. it closes by itself once you're in."
+                        : "this runs in the background. close this panel anytime, it keeps going.")
+            } else {
+                Button { store.onSync() } label: {
+                    Label("continue syncing", systemImage: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 16).padding(.vertical, 10)
+                        .background(Capsule().fill(X.blue))
+                }
+                .buttonStyle(PressStyle())
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 18).fill(X.raised))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(X.line))
+    }
+
+    func note(_ emoji: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(emoji)
+            Text(text).font(.system(size: 13, weight: .semibold)).foregroundStyle(X.text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12).fill(X.bg.opacity(0.7)))
+    }
+
+    func title(_ p: SyncProgress?) -> String {
+        guard store.syncing else {
+            return store.stats?.last_sync?.state == nil ? "let's fill your someday pile" : "your first sync stopped"
+        }
+        switch p?.phase {
+        case "login": return "log in to x 👀"
+        case "bookmark": return "stashing your bookmarks…"
+        case "like": return "stashing your likes…"
+        case "articles": return "reading your x articles…"
+        case "fetch", "write", "index": return "making it all searchable 🧠"
+        default: return "starting up…"
+        }
+    }
+
+    func detail(_ p: SyncProgress?) -> String {
+        guard store.syncing else {
+            return (store.stats?.last_sync?.message).map { "\($0)" }
+                ?? "somedayx reads your bookmarks and likes once, then keeps them fresh every night."
+        }
+        if p?.paused == true { return "x asked us to slow down. back in a minute ☕️" }
+        switch p?.phase {
+        case "bookmark", "like": return "the first sync goes through your whole history. big collections take a while."
+        case "articles": return "opening your saved x articles to read them in full."
+        case "fetch": return "grabbing link titles and images."
+        case "write": return "gemma is writing tl;drs."
+        case "index": return "gemma is reading your posts and images so you can search by meaning."
+        default: return "a chrome window may open for you to log in to x."
+        }
     }
 }
 

@@ -190,8 +190,8 @@ def _scroll_timeline(page, url: str, known: set[str], stop_after: int, max_minut
                     if rec.get("profile_image_url"):
                         avatars = (avatars + [rec["profile_image_url"]])[-12:]
             if len(older) >= FLUSH_EVERY:
-                save_older(older)
-                older = []
+                batch, older = older, []
+                save_older(batch)
             progress(seen=len(seen), new=found, avatars=avatars)
             if known_streak >= stop_after and not backfill:
                 print(f"  caught up ({known_streak} already-saved posts in a row)", flush=True)
@@ -206,11 +206,14 @@ def _scroll_timeline(page, url: str, known: set[str], stop_after: int, max_minut
         else:
             print("\n  stopped at the time limit", flush=True)
         print(f"\r  seen {len(seen)}, new {found}      ", flush=True)
-        if older:
-            save_older(older)
         return new, raw, reached_end
     finally:
-        page.remove_listener("response", on_response)
+        if older:  # also when the scroll fails midway: keep what was collected
+            save_older(older)
+        try:
+            page.remove_listener("response", on_response)
+        except Exception:
+            pass
 
 
 # ---------- X Articles ----------
@@ -356,10 +359,25 @@ def collect(conn: sqlite3.Connection, stop_after: int = 50, max_minutes: float =
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     out: dict[str, list[dict]] = {}
     with sync_playwright() as p:
-        ctx = _launch(p, headless)
+        # Collecting always runs without a window. A window opens only when
+        # X needs you to log in, and closes by itself once you have.
+        ctx = _launch(p, headless=True)
+        page = ctx.pages[0] if ctx.pages else ctx.new_page()
         try:
+            handle = _logged_in_handle(page, interactive=False, progress=progress)
+        except LoginRequired:
+            ctx.close()
+            if headless:
+                raise
+            login = _launch(p, headless=False)
+            try:
+                _logged_in_handle(login.pages[0] if login.pages else login.new_page(), interactive=True, progress=progress)
+            finally:
+                login.close()  # saves the session to the profile
+            ctx = _launch(p, headless=True)
             page = ctx.pages[0] if ctx.pages else ctx.new_page()
-            handle = _logged_in_handle(page, interactive=not headless, progress=progress)
+            handle = _logged_in_handle(page, interactive=False, progress=progress)
+        try:
             print(f"Logged in as @{handle}", flush=True)
             ACCOUNT.write_text(json.dumps({"handle": handle}))
             state = _backfill_state()
