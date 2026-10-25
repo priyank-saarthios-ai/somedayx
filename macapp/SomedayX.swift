@@ -3571,7 +3571,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     /// Manual syncs show the browser so X can ask you to log in; scheduled
     /// ones run headless and report a needed login as a notification.
     func runSync(scheduled: Bool) {
-        guard sync?.isRunning != true else { return }
+        guard sync?.isRunning != true, !Motion.snapshotting else { return }
         let p = pythonProcess(scheduled ? ["sync", "--headless"] : ["sync"], log: "sync.log")
         p.terminationHandler = { _ in
             DispatchQueue.main.async { self.syncFinished(scheduled: scheduled) }
