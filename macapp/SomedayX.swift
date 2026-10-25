@@ -2582,9 +2582,9 @@ struct SetupCard: View {
                 Spacer()
                 if active, let started = p?.started { Elapsed(since: started) }
             }
-            StepTrack(current: active ? step(p) : nil).padding(.top, 14)
+            StepTrack(current: active ? step(p) : nil).padding(.top, 10)
 
-            Text(title(p)).font(.system(size: 24, weight: .heavy)).foregroundStyle(X.text).padding(.top, 18)
+            Text(title(p)).font(.system(size: 22, weight: .heavy)).foregroundStyle(X.text).padding(.top, 12)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
             Text(detail(p)).font(.system(size: 13.5)).foregroundStyle(X.muted).padding(.top, 4)
@@ -2593,7 +2593,7 @@ struct SetupCard: View {
             if active {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     CountUp(value: Double(store.pileAtStart + store.foundThisSync))
-                        .font(.system(size: 46, weight: .black, design: .rounded)).foregroundStyle(X.text)
+                        .font(.system(size: 42, weight: .black, design: .rounded)).foregroundStyle(X.text)
                     Text("in your pile").font(.system(size: 15, weight: .bold)).foregroundStyle(X.muted)
                     Spacer()
                     Text(sub(p)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(X.muted)
@@ -2603,13 +2603,13 @@ struct SetupCard: View {
                 .animation(Motion.spring(0.5, 0.9), value: store.foundThisSync)
                 LiveBar(fraction: fraction(p)).padding(.top, 4)
                 if let items = p?.recent, !items.isEmpty {
-                    LiveFeed(items: items).padding(.top, 14)
+                    LiveFeed(items: items).padding(.top, 12)
                 } else if ["bookmark", "like"].contains(p?.phase ?? "") {
-                    FeedPlaceholder().padding(.top, 14)
+                    FeedPlaceholder().padding(.top, 12)
                 }
             }
 
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
             if active {
                 note(p?.phase == "login" ? "🪟" : "💤",
                      p?.phase == "login"
@@ -2784,7 +2784,7 @@ struct LiveFeed: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            ForEach(items.reversed(), id: \.self) { item in
+            ForEach(items.suffix(3).reversed(), id: \.self) { item in
                 HStack(spacing: 9) {
                     Avatar(url: biggerAvatar(item.avatar), size: 22)
                     Text(item.name ?? "").font(.system(size: 12.5, weight: .bold)).foregroundStyle(X.text).lineLimit(1)
@@ -2806,16 +2806,16 @@ struct LiveFeed: View {
 struct FeedPlaceholder: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            ForEach(0..<3, id: \.self) { i in
+            ForEach(0..<2, id: \.self) { i in
                 HStack(spacing: 9) {
                     Circle().fill(X.field).frame(width: 22, height: 22)
                     RoundedRectangle(cornerRadius: 4).fill(X.field).frame(width: 70, height: 9)
                     RoundedRectangle(cornerRadius: 4).fill(X.field).frame(width: CGFloat(150 + i * 50), height: 9)
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 10).padding(.vertical, 8)
+                .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(RoundedRectangle(cornerRadius: 10).fill(X.bg.opacity(0.55)))
-                .opacity(1 - Double(i) * 0.25)
+                .opacity(1 - Double(i) * 0.35)
             }
             Text("new saves show up here as they're found").font(.system(size: 11.5)).foregroundStyle(X.muted)
                 .padding(.leading, 4)
