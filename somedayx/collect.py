@@ -144,6 +144,7 @@ def _scroll_timeline(page, url: str, known: set[str], stop_after: int, max_minut
     older: list[dict] = []
     below_known = not known  # with nothing saved yet, everything is "older"
     avatars: list[str] = []
+    recent: list[dict] = []  # the last few stashed posts, for the app's live feed
 
     def on_response(resp):
         if TIMELINE_RE.search(resp.url):
@@ -189,10 +190,13 @@ def _scroll_timeline(page, url: str, known: set[str], stop_after: int, max_minut
                     (older if below_known else new).append(rec)
                     if rec.get("profile_image_url"):
                         avatars = (avatars + [rec["profile_image_url"]])[-12:]
+                    text = re.sub(r"https://t\.co/\w+|\s+", " ", rec.get("full_text") or "").strip()
+                    recent = (recent + [{"name": rec.get("name") or rec.get("screen_name"), "text": text[:110],
+                                         "avatar": rec.get("profile_image_url")}])[-4:]
             if len(older) >= FLUSH_EVERY:
                 batch, older = older, []
                 save_older(batch)
-            progress(seen=len(seen), new=found, avatars=avatars)
+            progress(seen=len(seen), new=found, avatars=avatars, recent=recent)
             if known_streak >= stop_after and not backfill:
                 print(f"  caught up ({known_streak} already-saved posts in a row)", flush=True)
                 break

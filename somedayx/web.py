@@ -21,6 +21,7 @@ and indexes whatever isn't indexed yet in the background.
 
 import atexit
 import hmac
+import os
 import json
 import mimetypes
 import secrets
@@ -147,6 +148,17 @@ def _median_likes(saved: str) -> int | None:
         return None
     return _conn.execute(f"""SELECT favorite_count FROM posts WHERE {saved} AND favorite_count IS NOT NULL
                               ORDER BY favorite_count LIMIT 1 OFFSET ?""", (n // 2,)).fetchone()[0]
+
+
+def _live(progress: dict | None) -> dict | None:
+    """Sync progress, unless the sync that wrote it is gone (killed)."""
+    if not progress or "pid" not in progress:
+        return progress
+    try:
+        os.kill(progress["pid"], 0)
+        return progress
+    except OSError:
+        return None
 
 
 def _setup_done() -> bool:
@@ -403,7 +415,7 @@ class Handler(BaseHTTPRequestHandler):
                     "likes": one("SELECT count(*) FROM posts WHERE is_like"),
                 }
             stats["last_sync"] = _read_json(LAST_SYNC)
-            stats["progress"] = _read_json(PROGRESS)
+            stats["progress"] = _live(_read_json(PROGRESS))
             stats["handle"] = (_read_json(ACCOUNT) or {}).get("handle")
             stats["brain"] = _brain()
             stats["setup_done"] = _setup_done()

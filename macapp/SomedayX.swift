@@ -251,7 +251,15 @@ struct Brain: Decodable, Equatable {
 }
 
 struct SyncProgress: Decodable, Equatable {
+    struct Recent: Decodable, Equatable, Hashable {
+        let name: String?
+        let text: String
+        let avatar: String?
+    }
+
     let phase: String?
+    let started: Double?
+    let recent: [Recent]?
     let seen: Int?
     let new: Int?
     let avatars: [String]?
@@ -726,7 +734,9 @@ final class Store: ObservableObject {
         withAnimation(Motion.spring()) { browsing = false; query = "" }
         scheduleSearch(delay: 0)
     }
-    var progress: SyncProgress? { syncing ? stats?.progress : nil }
+    /// A sync is running: one this app started, or any other (nightly, terminal).
+    var syncActive: Bool { syncing || stats?.progress != nil }
+    var progress: SyncProgress? { stats?.progress }
     var foundThisSync: Int { earlierFound + (progress?.new ?? 0) }
     var loggedOut: Bool { !syncing && stats?.last_sync?.state == "login" }
     var brain: Brain? { stats?.brain }
@@ -872,6 +882,9 @@ final class Store: ObservableObject {
             earlierFound += before?.progress?.new ?? 0
         }
         if before?.progress?.phase == "login" && s.progress?.phase != "login" { onLoggedIn() }
+        if before?.progress == nil && s.progress != nil { earlierFound = 0 }
+        // Follow syncs started elsewhere too, and refresh when one ends.
+        if s.progress != nil { startPolling() } else if !syncing { stopPolling(refresh: before?.progress != nil) }
         withAnimation(Motion.spring()) { stats = s }
         checkMilestone(total: s.total)
         updateETA(s.brain?.index)
@@ -936,16 +949,34 @@ final class Store: ObservableObject {
     // MARK: Sync
 
     private func syncingChanged() {
-        poll?.invalidate()
-        guard syncing else { return }
-        earlierFound = 0
+        if syncing {
+            earlierFound = 0
+            startPolling()
+        }
+    }
+
+    private func startPolling() {
+        guard poll == nil else { return }
         poll = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refreshStats() }
         }
     }
 
+    private func stopPolling(refresh: Bool) {
+        poll?.invalidate()
+        poll = nil
+        if refresh {  // a sync we were only following just finished
+            home = nil
+            scheduleSearch(delay: 0)
+        }
+    }
+
     func syncFinished(state: String, added: Int, manual: Bool) {
         syncing = false
+        if state == "busy" {  // one was already running: we're following it
+            refreshStats()
+            return show(toast: "already syncing. following along 👀")
+        }
         refreshStats()
         scheduleSearch(delay: 0)
         guard state == "ok" else { return }
@@ -1892,7 +1923,7 @@ struct Footer: View {
     @ViewBuilder var status: some View {
         if let p = store.progress {
             Text(progressText(p)).foregroundStyle(X.muted).contentTransition(.numericText())
-        } else if store.syncing {
+        } else if store.syncActive {
             Text("syncing with x…").foregroundStyle(X.muted)
         } else if store.brain?.busy == true {
             Text("gemma is working on it ↑").foregroundStyle(X.muted)
@@ -1926,10 +1957,10 @@ struct Footer: View {
             .frame(width: 16)
         }
         .buttonStyle(PressStyle())
-        .disabled(store.syncing)
+        .disabled(store.syncActive)
         .help("Sync now")
-        .onChange(of: store.syncing) { _, s in spin = s }
-        .onAppear { spin = store.syncing }
+        .onChange(of: store.syncActive) { _, s in spin = s }
+        .onAppear { spin = store.syncActive }
     }
 
     func progressText(_ p: SyncProgress) -> String {
@@ -2238,10 +2269,10 @@ struct FirstSync: View {
     @EnvironmentObject var store: Store
 
     /// When no sync is running, this screen follows the brain instead.
-    var brainWork: Bool { !store.syncing && store.brain?.busy == true }
+    var brainWork: Bool { !store.syncActive && store.brain?.busy == true }
 
     var counter: Double {
-        if store.syncing { return Double(store.foundThisSync) }
+        if store.syncActive { return Double(store.foundThisSync) }
         if brainWork, let b = store.brain {
             return Double(b.index.busy ? b.index.done ?? 0 : b.embed.busy ? b.embed.percent : b.writer.percent)
         }
@@ -2259,7 +2290,7 @@ struct FirstSync: View {
                 .font(.system(size: 64, weight: .heavy, design: .rounded))
                 .foregroundStyle(X.text)
                 .animation(Motion.spring(0.5, 0.9), value: counter)
-                if store.syncing, let line = store.brain?.activity {
+                if store.syncActive, let line = store.brain?.activity {
                     Text(line).font(.system(size: 13, weight: .semibold)).foregroundStyle(X.blue)
                 }
                 HStack(spacing: -8) {
@@ -2277,10 +2308,10 @@ struct FirstSync: View {
             }
         } actions: {
             HStack(spacing: 10) {
-                if store.syncing && !store.notificationsOn {
+                if store.syncActive && !store.notificationsOn {
                     SecondaryButton(title: "ping me when it's done") { store.onAskNotifications() }
                 }
-                PrimaryButton(title: store.syncing ? "set up the shortcut meanwhile" : "next") { store.next() }
+                PrimaryButton(title: store.syncActive ? "set up the shortcut meanwhile" : "next") { store.next() }
             }
         }
     }
@@ -2290,7 +2321,7 @@ struct FirstSync: View {
             if b.index.busy { return "teaching gemma your saves…" }
             return "getting gemma ready…"
         }
-        if !store.syncing { return store.hasData ? "done. you're stashed 🎉" : "hmm, nothing came through" }
+        if !store.syncActive { return store.hasData ? "done. you're stashed 🎉" : "hmm, nothing came through" }
         switch p?.phase {
         case "login": return "log in to x 👀"
         case "bookmark": return "stashing your bookmarks…"
@@ -2311,7 +2342,7 @@ struct FirstSync: View {
             }
             return b.found_on_mac ? "found gemma on your mac already. setting it up." : "a one-time download. after this, everything runs offline."
         }
-        if !store.syncing {
+        if !store.syncActive {
             return store.hasData ? "\(store.stats!.total.formatted()) posts, ready to search."
                 : "the sync didn't finish. check that you're logged in, then hit sync in the footer."
         }
@@ -2499,7 +2530,7 @@ struct HomeView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            if store.syncing || store.stats?.setup_done == false {
+            if store.syncActive || store.stats?.setup_done == false {
                 SetupCard()
             } else {
                 StatsCard()
@@ -2529,46 +2560,50 @@ struct Card<Content: View>: View {
 }
 
 /// While the first sync fills an empty library (or after one stopped):
-/// what's happening, live, and what to do about it.
+/// where it is, what's arriving, how fast, and what to do.
 struct SetupCard: View {
     @EnvironmentObject var store: Store
 
+    static let steps = ["log in", "bookmarks", "likes", "articles", "searchable"]
+
     var body: some View {
         let p = store.progress
+        let active = store.syncActive
         VStack(alignment: .leading, spacing: 0) {
-            Label(store.syncing ? "setting up" : "almost there", systemImage: store.syncing ? "arrow.triangle.2.circlepath" : "pause.circle")
-                .font(.system(size: 12.5, weight: .bold)).foregroundStyle(X.blue)
-            Text(title(p)).font(.system(size: 26, weight: .heavy)).foregroundStyle(X.text).padding(.top, 10)
+            HStack {
+                Text(active ? "setting up your someday pile" : "almost there")
+                    .font(.system(size: 12.5, weight: .bold)).foregroundStyle(X.blue)
+                Spacer()
+                if active, let started = p?.started { Elapsed(since: started) }
+            }
+            StepTrack(current: active ? step(p) : nil).padding(.top, 14)
+
+            Text(title(p)).font(.system(size: 24, weight: .heavy)).foregroundStyle(X.text).padding(.top, 18)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(detail(p)).font(.system(size: 14)).foregroundStyle(X.muted).padding(.top, 6)
+                .contentTransition(.opacity)
+            Text(detail(p)).font(.system(size: 13.5)).foregroundStyle(X.muted).padding(.top, 4)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if store.syncing {
+            if active {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     CountUp(value: Double(store.foundThisSync))
-                        .font(.system(size: 54, weight: .black, design: .rounded)).foregroundStyle(X.text)
-                    Text("saves found").font(.system(size: 16, weight: .bold)).foregroundStyle(X.muted)
+                        .font(.system(size: 46, weight: .black, design: .rounded)).foregroundStyle(X.text)
+                    Text("saves stashed").font(.system(size: 15, weight: .bold)).foregroundStyle(X.muted)
+                    Spacer()
+                    if let rate = rate(p) { Text(rate).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(X.muted) }
                 }
-                .padding(.top, 14)
+                .padding(.top, 10)
                 .animation(Motion.spring(0.5, 0.9), value: store.foundThisSync)
-                HStack(spacing: -8) {
-                    ForEach(Array((p?.avatars ?? []).suffix(10)), id: \.self) { a in
-                        Avatar(url: biggerAvatar(a), size: 30)
-                            .overlay(Circle().strokeBorder(X.raised, lineWidth: 2))
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
-                }
-                .frame(height: 32)
-                .animation(Motion.spring(), value: p?.avatars ?? [])
-                ProgressView().progressViewStyle(.linear).tint(X.blue).padding(.top, 14)
+                LiveBar(fraction: fraction(p)).padding(.top, 4)
+                LiveFeed(items: p?.recent ?? []).padding(.top, 14)
             }
 
-            Spacer(minLength: 12)
-            if store.syncing {
+            Spacer(minLength: 10)
+            if active {
                 note(p?.phase == "login" ? "🪟" : "💤",
                      p?.phase == "login"
                         ? "log in to x in the chrome window. it closes by itself once you're in."
-                        : "this runs in the background. close this panel anytime, it keeps going.")
+                        : "runs in the background. close this panel anytime, it keeps going.")
             } else {
                 Button { store.onSync() } label: {
                     Label("continue syncing", systemImage: "arrow.clockwise")
@@ -2581,48 +2616,181 @@ struct SetupCard: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 18).fill(X.raised))
+        .background(
+            ZStack {
+                X.raised
+                RadialGradient(colors: [X.blue.opacity(active ? 0.16 : 0.06), .clear], center: .topTrailing, startRadius: 5, endRadius: 360)
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(X.line))
+        .animation(Motion.spring(), value: p?.phase)
+    }
+
+    func step(_ p: SyncProgress?) -> Int {
+        switch p?.phase {
+        case "bookmark": return 1
+        case "like": return 2
+        case "articles": return 3
+        case "fetch", "write", "index": return 4
+        default: return 0
+        }
+    }
+
+    /// Real progress where it's known (articles, indexing); moving otherwise.
+    func fraction(_ p: SyncProgress?) -> Double? {
+        guard let t = p?.total, t > 0, ["articles", "write", "index"].contains(p?.phase ?? "") else { return nil }
+        return Double(p?.done ?? 0) / Double(t)
+    }
+
+    func rate(_ p: SyncProgress?) -> String? {
+        guard let started = p?.started, store.foundThisSync > 20 else { return nil }
+        let minutes = max(Date().timeIntervalSince1970 - started, 1) / 60
+        return "≈ \(Int(Double(store.foundThisSync) / minutes)) a minute"
     }
 
     func note(_ emoji: String, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text(emoji)
-            Text(text).font(.system(size: 13, weight: .semibold)).foregroundStyle(X.text)
+            Text(text).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(X.text)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(12)
+        .padding(11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 12).fill(X.bg.opacity(0.7)))
     }
 
     func title(_ p: SyncProgress?) -> String {
-        guard store.syncing else {
+        guard store.syncActive else {
             return store.stats?.last_sync?.state == nil ? "let's fill your someday pile" : "your first sync stopped"
         }
+        if p?.paused == true { return "x asked us to slow down ☕️" }
         switch p?.phase {
         case "login": return "log in to x 👀"
         case "bookmark": return "stashing your bookmarks…"
         case "like": return "stashing your likes…"
         case "articles": return "reading your x articles…"
-        case "fetch", "write", "index": return "making it all searchable 🧠"
-        default: return "starting up…"
+        case "fetch": return "grabbing links & images…"
+        case "write": return "writing tl;drs…"
+        case "index": return "making it all searchable 🧠"
+        default: return "warming up…"
         }
     }
 
     func detail(_ p: SyncProgress?) -> String {
-        guard store.syncing else {
-            return (store.stats?.last_sync?.message).map { "\($0)" }
+        guard store.syncActive else {
+            return store.stats?.last_sync?.message
                 ?? "somedayx reads your bookmarks and likes once, then keeps them fresh every night."
         }
-        if p?.paused == true { return "x asked us to slow down. back in a minute ☕️" }
+        if p?.paused == true { return "back in a minute. nothing to do." }
         switch p?.phase {
-        case "bookmark", "like": return "the first sync goes through your whole history. big collections take a while."
-        case "articles": return "opening your saved x articles to read them in full."
-        case "fetch": return "grabbing link titles and images."
-        case "write": return "gemma is writing tl;drs."
-        case "index": return "gemma is reading your posts and images so you can search by meaning."
+        case "bookmark", "like": return "going through your whole history, oldest saves included."
+        case "articles": return "opening saved x articles to read them in full."
+        case "fetch": return "so links show real titles and images are searchable."
+        case "write": return "gemma is summarising your new posts."
+        case "index": return "gemma reads every post and image once so you can search by meaning."
         default: return "a chrome window may open for you to log in to x."
+        }
+    }
+}
+
+/// The five setup steps as dots on a line; the current one pulses.
+struct StepTrack: View {
+    let current: Int?
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: current == nil || Motion.reduced)) { tl in
+            let pulse = 0.55 + 0.45 * (sin(tl.date.timeIntervalSinceReferenceDate * 4) + 1) / 2
+            HStack(spacing: 0) {
+                ForEach(Array(SetupCard.steps.enumerated()), id: \.offset) { i, name in
+                    let done = (current ?? -1) > i, now = current == i
+                    VStack(spacing: 6) {
+                        ZStack {
+                            Circle().fill(done ? X.green : now ? X.blue : X.field).frame(width: 18, height: 18)
+                            if done {
+                                Image(systemName: "checkmark").font(.system(size: 9, weight: .black)).foregroundStyle(.white)
+                            } else if now {
+                                Circle().stroke(X.blue.opacity(0.5), lineWidth: 2).frame(width: 26, height: 26)
+                                    .scaleEffect(0.8 + 0.35 * pulse).opacity(1.2 - pulse)
+                            }
+                        }
+                        .frame(width: 28, height: 28)
+                        Text(name).font(.system(size: 11, weight: now ? .heavy : .semibold))
+                            .foregroundStyle(now ? X.text : done ? X.green : X.muted)
+                    }
+                    if i < SetupCard.steps.count - 1 {
+                        Rectangle().fill((current ?? -1) > i ? X.green : X.line).frame(height: 2)
+                            .padding(.bottom, 20)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// A slim bar: real progress when known, a moving sheen while working.
+struct LiveBar: View {
+    let fraction: Double?
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: fraction != nil || Motion.reduced)) { tl in
+            GeometryReader { g in
+                let w = g.size.width
+                ZStack(alignment: .leading) {
+                    Capsule().fill(X.field)
+                    if let f = fraction {
+                        Capsule().fill(LinearGradient(colors: [X.blue, X.pink], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(8, w * f))
+                            .animation(Motion.ease(0.4), value: f)
+                    } else {
+                        let t = tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6
+                        Capsule()
+                            .fill(LinearGradient(colors: [X.blue.opacity(0), X.blue, X.pink, X.pink.opacity(0)],
+                                                 startPoint: .leading, endPoint: .trailing))
+                            .frame(width: w * 0.35)
+                            .offset(x: (w * 1.35) * t - w * 0.35)
+                    }
+                }
+                .clipShape(Capsule())
+            }
+        }
+        .frame(height: 6)
+    }
+}
+
+/// The last few posts being stashed, sliding in as they arrive.
+struct LiveFeed: View {
+    let items: [SyncProgress.Recent]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(items.reversed(), id: \.self) { item in
+                HStack(spacing: 9) {
+                    Avatar(url: biggerAvatar(item.avatar), size: 22)
+                    Text(item.name ?? "").font(.system(size: 12.5, weight: .bold)).foregroundStyle(X.text).lineLimit(1)
+                        .fixedSize()
+                    Text(item.text.isEmpty ? "a post with media" : item.text)
+                        .font(.system(size: 12.5)).foregroundStyle(X.muted).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(RoundedRectangle(cornerRadius: 10).fill(X.bg.opacity(0.55)))
+                .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity), removal: .opacity))
+            }
+        }
+        .animation(Motion.spring(0.4, 0.85), value: items)
+    }
+}
+
+/// "3m 12s", ticking.
+struct Elapsed: View {
+    let since: Double
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { tl in
+            let s = max(0, Int(tl.date.timeIntervalSince1970 - since))
+            Text(s < 3600 ? "\(s / 60)m \(s % 60)s" : "\(s / 3600)h \(s % 3600 / 60)m")
+                .font(.system(size: 12, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(X.muted)
         }
     }
 }
@@ -2871,8 +3039,8 @@ struct QuickActions: View {
         VStack(spacing: 8) {
             action("list.bullet", "browse recent \(store.scope.noun)", "↓") { store.browseRecent() }
             action("dice", "surprise me", "⌘R") { store.surprise() }
-            action("arrow.clockwise", store.syncing ? "syncing with x…" : "sync now", nil) { store.onSync() }
-                .disabled(store.syncing)
+            action("arrow.clockwise", store.syncActive ? "syncing with x…" : "sync now", nil) { store.onSync() }
+                .disabled(store.syncActive)
         }
     }
 
@@ -3574,7 +3742,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         guard sync?.isRunning != true, !Motion.snapshotting else { return }
         let p = pythonProcess(scheduled ? ["sync", "--headless"] : ["sync"], log: "sync.log")
         p.terminationHandler = { _ in
-            DispatchQueue.main.async { self.syncFinished(scheduled: scheduled) }
+            let status = p.terminationStatus
+            DispatchQueue.main.async { self.syncFinished(scheduled: scheduled, busy: status == 3) }
         }
         do {
             try p.run()
@@ -3585,7 +3754,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         }
     }
 
-    func syncFinished(scheduled: Bool) {
+    func syncFinished(scheduled: Bool, busy: Bool = false) {
+        if busy { return store.syncFinished(state: "busy", added: 0, manual: !scheduled) }
         let json = lastSync()?.json ?? [:]
         let b = json["bookmark"] as? Int ?? 0, l = json["like"] as? Int ?? 0
         store.syncFinished(state: json["state"] as? String ?? "error", added: b + l, manual: !scheduled)

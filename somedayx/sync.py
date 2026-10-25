@@ -10,6 +10,8 @@ manual "Sync now" never overlap.
 
 import fcntl
 import json
+import os
+import time
 import subprocess
 import traceback
 from datetime import datetime
@@ -21,6 +23,7 @@ LOG_DIR = DATA / "logs"
 STATUS = LOG_DIR / "last_sync.json"
 LOCK = LOG_DIR / "sync.lock"
 PROGRESS = LOG_DIR / "sync_progress.json"
+BUSY = 3  # exit code: another sync is running (the app follows that one instead)
 
 
 class Progress:
@@ -28,7 +31,8 @@ class Progress:
     write | index), counts and the latest avatars, merged across calls."""
 
     def __init__(self):
-        self.state: dict = {"phase": "starting"}
+        # pid: so a reader can tell a live sync from one that was killed.
+        self.state: dict = {"phase": "starting", "pid": os.getpid(), "started": time.time()}
         self.write()
 
     def __call__(self, **fields) -> None:
@@ -65,7 +69,7 @@ def run_sync(conn, headless: bool = False, notify: bool = False) -> int:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         print("Another sync is already running.")
-        return 1
+        return BUSY
 
     _status(state="running")
     progress = Progress()
