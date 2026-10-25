@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SomedayX: search your X saves by meaning, on your Mac</title>
+<meta name="description" content="For the X posts you'll read someday. Search everything you've bookmarked or liked on X by meaning, from your Mac's menu bar. Free, open source, 100% on your Mac.">
+<meta property="og:title" content="SomedayX: for the X posts you'll read someday">
+<meta property="og:description" content="Search your X bookmarks and likes by meaning, even inside images. Free, open source, runs 100% on your Mac.">
+<meta property="og:image" content="https://somedayx.com/img/og.png">
+<meta property="og:url" content="https://somedayx.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@priyankmmehta">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='black'/><path d='M30 18h40v66L50 70 30 84z' fill='white'/></svg>">
+<style>
+  :root {
+    --bg: #000; --raised: #16181c; --field: #202327; --line: #2f3336;
+    --text: #e7e9ea; --muted: #71767b; --blue: #1d9bf0; --pink: #f91880; --green: #00ba7c;
+    --max: 1080px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+  .glow {
+    position: absolute; inset: -200px 0 auto 0; height: 800px; pointer-events: none; z-index: -1;
+    background: radial-gradient(600px 380px at 75% 20%, rgba(29,155,240,.28), transparent 70%),
+                radial-gradient(500px 340px at 15% 55%, rgba(249,24,128,.14), transparent 70%);
+  }
+
+  /* nav */
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.01em; }
+  .logo svg { width: 28px; height: 28px; }
+  .navlinks { display: flex; gap: 22px; font-size: 15px; color: var(--muted); }
+  .navlinks a:hover { color: var(--text); }
+
+  /* banner */
+  .banner {
+    max-width: 100%;
+    display: inline-flex; gap: 8px; align-items: center; margin-top: 40px;
+    padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; color: var(--muted);
+  }
+  .banner b { color: var(--text); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+
+  /* hero */
+  .hero > *, .two > * { min-width: 0; }  /* long lines (the install command) scroll instead of widening the page */
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding: 26px 0 90px; }
+  h1 { font-size: clamp(40px, 6vw, 66px); line-height: 1.02; letter-spacing: -.035em; font-weight: 900; margin-top: 18px; }
+  h1 .soft { color: var(--muted); }
+  .lede { font-size: 19px; color: #c4c8cc; margin-top: 20px; max-width: 34em; }
+  .ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 999px;
+    font-weight: 700; font-size: 16px; transition: transform .15s ease, opacity .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--text); color: #000; }
+  .btn.ghost { border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--muted); }
+  .fine { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+
+  /* panel mock */
+  .stage { position: relative; }
+  .keys { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+  .key {
+    width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center;
+    font: 600 23px/1 ui-rounded, -apple-system, sans-serif; background: var(--raised);
+    border: 1px solid var(--line); box-shadow: 0 3px 0 #000; transition: all .12s;
+  }
+  .key.lit { background: var(--blue); color: #fff; transform: translateY(2px) scale(.94); box-shadow: none; }
+  .panel {
+    background: #0b0b0c; border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+    box-shadow: 0 30px 80px rgba(29,155,240,.18), 0 0 0 1px rgba(255,255,255,.02);
+  }
+  .bar { display: flex; align-items: center; gap: 10px; margin: 14px; padding: 0 14px; height: 44px;
+         border: 1px solid var(--blue); border-radius: 999px; font-size: 15.5px; }
+  .bar svg { width: 16px; height: 16px; color: var(--blue); flex: none; }
+  .caret { display: inline-block; width: 2px; height: 18px; background: var(--blue); vertical-align: -3px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .seg { margin-left: auto; display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--field); font-size: 11.5px; font-weight: 700; }
+  .seg span { padding: 3px 9px; border-radius: 999px; color: var(--muted); }
+  .seg span.on { background: var(--blue); color: #fff; }
+  .rows { border-top: 1px solid var(--line); min-height: 236px; }
+  .row { display: flex; gap: 11px; padding: 12px 16px; border-bottom: 1px solid var(--line);
+         opacity: 0; transform: translateY(8px); transition: all .35s cubic-bezier(.2,.8,.2,1); }
+  .row.in { opacity: 1; transform: none; }
+  .row.sel { background: rgba(29,155,240,.12); box-shadow: inset 3px 0 0 var(--blue); }
+  .av { width: 34px; height: 34px; border-radius: 50%; flex: none; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .meta b { color: var(--text); }
+  .txt { font-size: 14px; margin-top: 2px; color: #d6d9db; }
+  .txt mark { background: none; color: var(--text); font-weight: 800; }
+  .tag { display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+  .foot { display: flex; justify-content: space-between; padding: 9px 16px; font-size: 12px; color: var(--muted); background: var(--raised); }
+
+  /* sections */
+  section { padding: 80px 0; border-top: 1px solid #111; }
+  h2 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -.03em; line-height: 1.08; font-weight: 900; }
+  .kicker { color: var(--blue); font-weight: 800; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px; }
+  .sub { color: var(--muted); font-size: 18px; margin-top: 12px; max-width: 40em; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+  .card { background: var(--raised); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+  .card .em { font-size: 28px; }
+  .card h3 { font-size: 19px; margin-top: 12px; letter-spacing: -.01em; }
+  .card p { color: var(--muted); font-size: 15.5px; margin-top: 8px; }
+  kbd { font: 600 13px ui-rounded, -apple-system, sans-serif; background: var(--field); border: 1px solid var(--line);
+        border-radius: 6px; padding: 1px 7px; color: var(--text); }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* wrapped */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 40px; }
+  .cards img { width: 100%; border-radius: 16px; display: block; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+               transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+  .cards img:hover { transform: translateY(-4px) rotate(-.4deg); }
+  .personas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .personas span { padding: 7px 13px; border-radius: 999px; background: rgba(29,155,240,.12); color: var(--blue); font-weight: 700; font-size: 14px; }
+
+  /* privacy + install */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 10px; }
+  ul.check { list-style: none; padding: 0; margin-top: 26px; display: grid; gap: 14px; }
+  ul.check li { display: flex; gap: 12px; color: #c4c8cc; }
+  ul.check li::before { content: "✓"; color: var(--green); font-weight: 900; }
+  .term { background: #0b0b0c; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-top: 26px; }
+  .term .top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .term pre { padding: 16px; overflow-x: auto; font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); }
+  .term pre .c { color: var(--muted); }
+  .copy { cursor: pointer; border: 1px solid var(--line); background: none; color: var(--text); border-radius: 8px; padding: 3px 10px; font-size: 12.5px; }
+  .reqs { color: var(--muted); font-size: 14.5px; margin-top: 16px; }
+
+  /* faq */
+  details { border-bottom: 1px solid var(--line); padding: 18px 0; }
+  details summary { cursor: pointer; font-weight: 700; font-size: 17.5px; list-style: none; display: flex; justify-content: space-between; }
+  details summary::after { content: "+"; color: var(--muted); font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details p { color: var(--muted); margin-top: 10px; max-width: 46em; }
+
+  footer { padding: 50px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid #111; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  footer a { color: var(--text); }
+
+  @media (max-width: 860px) {
+    .hero, .two { grid-template-columns: 1fr; gap: 40px; }
+    .grid3 { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: 1fr; }
+    .navlinks .hide { display: none; }
+  }
+  @media (max-width: 480px) {
+    .seg { display: none; }
+    .banner { border-radius: 16px; align-items: flex-start; }
+    .dot { margin-top: 8px; flex: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<div class="wrap">
+  <nav>
+    <a class="logo" href="#"><svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff"/><path d="M30 18h40v66L50 70 30 84z" fill="#000"/></svg>SomedayX</a>
+    <div class="navlinks">
+      <a class="hide" href="#how">How it works</a>
+      <a class="hide" href="#wrapped">Wrapped</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/priyank-saarthios-ai/somedayx">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- Pre-launch: remove this banner on launch day -->
+  <a class="banner" href="https://x.com/priyankmmehta"><span class="dot"></span><span>Launching <b>Nov 10</b> · follow <b>@priyankmmehta</b> for the drop</span></a>
+
+  <div class="hero">
+    <div>
+      <h1>For the X posts<br>you'll read <span class="soft">someday.</span></h1>
+      <p class="lede">You've saved thousands of posts and never found one again. SomedayX searches every bookmark and like by <b>meaning</b>, even what's inside the images, from your Mac's menu bar.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#install">Install on your Mac</a>
+        <a class="btn ghost" href="https://github.com/priyank-saarthios-ai/somedayx">★ Star on GitHub</a>
+      </div>
+      <p class="fine">Free &amp; open source · 100% on your Mac · no account, no cloud, no tracking</p>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <div class="keys"><div class="key" id="k1">⌥</div><div class="key" id="k2">⌥</div></div>
+      <div class="panel">
+        <div class="bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span id="q"></span><span class="caret"></span>
+          <div class="seg"><span class="on">Both</span><span>Bookmarks</span><span>Likes</span></div>
+        </div>
+        <div class="rows" id="rows"></div>
+        <div class="foot"><span>↵ open · ⌘L link · esc home</span><span>found by meaning ✨</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">How it feels</div>
+    <h2>Type what you remember.<br>Not what it said.</h2>
+    <div class="grid3">
+      <div class="card"><div class="em">⌥⌥</div><h3>Double-tap Option, anywhere</h3><p>A Spotlight-style panel opens over any app. Type "that thread about pricing" and it's there, even if the post never used those words.</p></div>
+      <div class="card"><div class="em">🖼️</div><h3>Searches inside images</h3><p>"screenshot of a dashboard", "meme about startups". It finds posts by what's in the picture and reads the text in screenshots.</p></div>
+      <div class="card"><div class="em">📰</div><h3>X Articles, fully read</h3><p>Long-form X Articles are searchable word for word, not just their titles. Filter with <code>has:article</code>, <code>from:</code>, <code>year:</code> and more.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="wrapped">
+  <div class="wrap">
+    <div class="kicker">SomedayX Wrapped</div>
+    <h2>Get roasted by your<br>own bookmarks.</h2>
+    <p class="sub">Every card is random: a new headline, colours and stats each time. Shuffle until it hurts, then share it on X in one click. The image is already attached.</p>
+    <div class="cards">
+      <img src="img/card-11.jpg" alt="A SomedayX Wrapped card: 2,926 posts saved since 2014, AI agent maximalist, 136 threads to finish" loading="lazy">
+      <img src="img/card-3.jpg" alt="Another random Wrapped card" loading="lazy">
+      <img src="img/card-29.jpg" alt="Another random Wrapped card" loading="lazy">
+      <img src="img/card-42.jpg" alt="Another random Wrapped card" loading="lazy">
+    </div>
+    <div class="personas">
+      <span>🤖 AI agent maximalist</span><span>🚀 founder brain, unemployed thumbs</span><span>🎨 certified design snob</span>
+      <span>🧑‍💻 professional repo hoarder</span><span>🧩 PM in denial</span><span>📈 growth goblin</span><span>🤡 meme archivist</span>
+      <span>🏏 armchair selector</span><span>🗂️ chief curator of the timeline</span>
+    </div>
+  </div>
+</section>
+
+<section id="private">
+  <div class="wrap two">
+    <div>
+      <div class="kicker">Private by design</div>
+      <h2>Your saves never<br>leave your Mac.</h2>
+      <ul class="check">
+        <li>Google's Gemma models run locally through llama.cpp. Search works offline.</li>
+        <li>No accounts, no servers, no analytics. Read the code: it's all on GitHub.</li>
+        <li>Read-only. It never posts, likes or follows anything.</li>
+        <li>Everything lives in one folder on your Mac, readable only by you.</li>
+      </ul>
+    </div>
+    <div id="install">
+      <div class="kicker">Install</div>
+      <h2>One command.</h2>
+      <div class="term">
+        <div class="top"><span>Terminal</span><button class="copy" id="copy">copy</button></div>
+<pre id="cmd"><span class="c"># builds and opens SomedayX; the app walks you through the rest</span>
+git clone https://github.com/priyank-saarthios-ai/somedayx.git
+cd somedayx &amp;&amp; macapp/install.sh</pre>
+      </div>
+      <p class="reqs">macOS 14+ · Apple silicon recommended · 8 GB RAM · ~1.5 GB disk · <a href="https://brew.sh" style="color:var(--blue)">Homebrew</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="kicker">Questions</div>
+    <h2>Fair questions.</h2>
+    <div style="margin-top:24px">
+      <details><summary>How does it get my bookmarks?</summary><p>It opens its own Chrome window where you log in to X once. After that it reads your Bookmarks and Likes the same way the X website loads them for you, at a human pace, read-only.</p></details>
+      <details><summary>Is this allowed by X?</summary><p>SomedayX is unofficial and not affiliated with X Corp. It only reads your own saves with your own session. Automated access may still conflict with X's terms; you decide whether to use it.</p></details>
+      <details><summary>Why not the official X API?</summary><p>It charges per post read, and the bookmarks endpoint has historically returned only your latest ~800 bookmarks. SomedayX gets your whole history, for free.</p></details>
+      <details><summary>Will it slow down my Mac?</summary><p>Indexing a few thousand saves takes about half an hour once, in the background. After that the search model sleeps when idle and wakes in a second when you search.</p></details>
+      <details><summary>Windows? Linux?</summary><p>Mac only for now. If you'd use it elsewhere, say so in a GitHub discussion.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>I built SomedayX because my 2,926 bookmarks were a graveyard. · <a href="https://x.com/priyankmmehta">@priyankmmehta</a></span>
+    <span>MIT licensed · Not affiliated with X Corp.</span>
+  </div>
+</footer>
+
+<script>
+  // The hero demo: double-tap ⌥, type a vague memory, results appear.
+  const demos = [
+    { q: "that thread about pricing", hits: [
+      { tag: "🧵 thread · bookmarked 2024", name: "A founder you follow", text: "How to <mark>price</mark> your SaaS: 9 lessons from raising <mark>prices</mark> 3 times", c: "#1d9bf0" },
+      { tag: "", name: "A newsletter writer", text: "The <mark>pricing</mark> page teardown I wish I'd read before launch", c: "#f91880" },
+      { tag: "", name: "An indie hacker", text: "We doubled our <mark>price</mark>. Churn went down. Here's why", c: "#00ba7c" } ] },
+    { q: "screenshot of a dashboard", hits: [
+      { tag: "🖼️ found in an image · liked 2023", name: "A designer you like", text: "Shipped the new analytics view this week. Feedback welcome", c: "#7856ff" },
+      { tag: "", name: "A data person", text: "My favourite <mark>dashboard</mark> layouts, collected over 2 years", c: "#ffd400" },
+      { tag: "", name: "A startup", text: "Our metrics, publicly, every month. Here's October", c: "#1d9bf0" } ] },
+    { q: "that meme about vibe coding", hits: [
+      { tag: "🤡 liked 2025", name: "Someone very online", text: "me reading the code the AI wrote at 2am", c: "#f91880" },
+      { tag: "", name: "A developer", text: "<mark>vibe coding</mark> is fun until production", c: "#00ba7c" },
+      { tag: "", name: "A tech account", text: "POV: you asked the agent to fix one bug", c: "#ff7a00" } ] },
+  ];
+  const q = document.getElementById("q"), rows = document.getElementById("rows");
+  const k1 = document.getElementById("k1"), k2 = document.getElementById("k2");
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function render(hits) {
+    rows.innerHTML = hits.map((h, i) => `
+      <div class="row${i === 0 ? " sel" : ""}">
+        <div class="av" style="background:${h.c};opacity:.85"></div>
+        <div>${h.tag ? `<div class="tag">${h.tag}</div>` : ""}
+          <div class="meta"><b>${h.name}</b></div>
+          <div class="txt">${h.text}</div></div>
+      </div>`).join("");
+  }
+
+  async function loop() {
+    for (let n = 0; ; n = (n + 1) % demos.length) {
+      const d = demos[n];
+      if (reduced) { q.textContent = d.q; render(d.hits); [...rows.children].forEach(r => r.classList.add("in")); return; }
+      for (const k of [k1, k2]) { k.classList.add("lit"); await wait(150); k.classList.remove("lit"); await wait(110); }
+      rows.innerHTML = ""; q.textContent = "";
+      for (const ch of d.q) { q.textContent += ch; await wait(55); }
+      await wait(250);
+      render(d.hits);
+      for (const r of rows.children) { r.classList.add("in"); await wait(110); }
+      await wait(2600);
+    }
+  }
+  loop();
+
+  document.getElementById("copy").onclick = async e => {
+    await navigator.clipboard.writeText("git clone https://github.com/priyank-saarthios-ai/somedayx.git\ncd somedayx && macapp/install.sh");
+    e.target.textContent = "copied ✓"; setTimeout(() => e.target.textContent = "copy", 1500);
+  };
+</script>
+</body>
+</html>
