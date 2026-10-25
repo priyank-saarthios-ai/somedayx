@@ -149,6 +149,16 @@ def _median_likes(saved: str) -> int | None:
                               ORDER BY favorite_count LIMIT 1 OFFSET ?""", (n // 2,)).fetchone()[0]
 
 
+def _setup_done() -> bool:
+    """Has the first full-history sync finished, for both lists?"""
+    from .collect import _backfill_state
+
+    state = _backfill_state()
+    with _lock:
+        has = {k: bool(_conn.execute(f"SELECT 1 FROM posts WHERE is_{k} LIMIT 1").fetchone()) for k in ("bookmark", "like")}
+    return all(state.get(k, has[k]) for k in ("bookmark", "like"))  # older libraries: done if present
+
+
 def _wrapped(source: str | None = None) -> dict:
     one = lambda sql: _conn.execute(sql).fetchone()[0]
     saved = _saved(source)
@@ -396,6 +406,7 @@ class Handler(BaseHTTPRequestHandler):
             stats["progress"] = _read_json(PROGRESS)
             stats["handle"] = (_read_json(ACCOUNT) or {}).get("handle")
             stats["brain"] = _brain()
+            stats["setup_done"] = _setup_done()
             return self._json(stats)
 
         if url.path.startswith("/media/"):

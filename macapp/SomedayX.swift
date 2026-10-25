@@ -276,6 +276,7 @@ struct Stats: Decodable {
     let progress: SyncProgress?
     let handle: String?
     let brain: Brain?
+    let setup_done: Bool?
 }
 
 struct Topic: Decodable, Hashable {
@@ -2498,7 +2499,7 @@ struct HomeView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            if store.syncing || store.stats?.total == 0 {
+            if store.syncing || store.stats?.setup_done == false {
                 SetupCard()
             } else {
                 StatsCard()
