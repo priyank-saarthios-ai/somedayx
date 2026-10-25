@@ -393,11 +393,11 @@ struct Wrapped: Decodable, Equatable {
         var s: [WrapStat] = []
         if let u = underdog {
             s.append(WrapStat(emoji: "🐣", title: "certified early fan", value: "\(u.likes) likes",
-                              detail: "on a post by @\(u.screen_name) i saved", line: "saved a post with \(u.likes) likes. early supporter energy"))
+                              detail: "on a post i saved. day one fan", line: "saved a post with \(u.likes) likes. early supporter energy"))
         }
         if let v = viral, let l = v.favorite_count, l > 10_000 {
             s.append(WrapStat(emoji: "📣", title: "mainstream moment", value: "\(Fmt.count(l)) likes",
-                              detail: "my most viral save, @\(v.screen_name)", line: "my most viral save has \(Fmt.count(l)) likes. very underground"))
+                              detail: "my most viral save", line: "my most viral save has \(Fmt.count(l)) likes. very underground"))
         }
         if let n = one_hit, n > 0 {
             s.append(WrapStat(emoji: "🎯", title: "one-hit wonders", value: "\(n.formatted()) accounts",
@@ -1073,6 +1073,12 @@ final class Store: ObservableObject {
     private func wrappedPNG() -> Data? {
         guard let tiff = wrappedImage()?.tiffRepresentation else { return nil }
         return NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:])
+    }
+
+    /// Debug aid for screenshots and the website: write the card image.
+    func exportCard(to path: String) async {
+        guard await currentWrapped() != nil, let png = wrappedPNG() else { return }
+        try? png.write(to: URL(fileURLWithPath: path))
     }
 
     @discardableResult
@@ -3038,6 +3044,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
             self.store.appeared = true
             self.store.query = env["SOMEDAYX_QUERY"] ?? ""
             switch env["SOMEDAYX_VIEW"] ?? "" {
+            case "card":  // just the shareable image, exactly as it's posted
+                self.store.step = nil
+                if let seed = env["SOMEDAYX_SEED"].flatMap(UInt64.init) { self.store.cardSeed = seed }
+                Task {
+                    await self.store.exportCard(to: path)
+                    NSApp.terminate(nil)
+                }
+                return
             case "wrapped":
                 self.store.step = nil
                 if let seed = env["SOMEDAYX_SEED"].flatMap(UInt64.init) { self.store.cardSeed = seed }
