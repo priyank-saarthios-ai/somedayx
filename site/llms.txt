@@ -1,0 +1,28 @@
+# SomedayX
+
+> SomedayX is a free, open-source Mac app that searches everything you've bookmarked or liked on X (Twitter) by meaning, from the menu bar. It runs 100% on your Mac: Google's EmbeddingGemma model (via llama.cpp) for search over text and images, and Apple Vision to read text in screenshots. No account, no server, no tracking.
+
+## Key facts
+- Platform: macOS 14 or newer; Apple silicon recommended; 8 GB RAM; about 1.5 GB of disk.
+- Price: free; MIT licensed; source at https://github.com/priyank-saarthios-ai/somedayx
+- Open it from anywhere by double-tapping the Option key (or ⌥⌘X).
+- Finds posts by meaning ("that thread about pricing"), inside images ("screenshot of a dashboard") and in full X Articles.
+- Filters: from:handle, is:bookmark, is:like, has:image, has:video, has:link, has:article, year:2025, since:, until:.
+- How it gets your saves: it opens its own browser window where you log in to X once, then reads your Bookmarks and Likes read-only, the way the X website loads them. Unofficial; not affiliated with X Corp.
+- SomedayX Wrapped: a shareable card that roasts your saving habits and gives you a persona.
+- Made by Priyank Mehta (https://x.com/priyankmmehta).
+
+## Pages
+- [Home](https://somedayx.com/): what it is, install, FAQ
+- [Source code and install guide](https://github.com/priyank-saarthios-ai/somedayx)
+
+## Wrapped personas
+- [🤖 AI agent maximalist](https://somedayx.com/p/ai-agent-maximalist/): Bookmarks every new agent framework. Uses none of them.
+- [🚀 founder brain, unemployed thumbs](https://somedayx.com/p/founder-brain/): Saves every fundraising thread. Replies to zero investors.
+- [🎨 certified design snob](https://somedayx.com/p/design-snob/): 400 landing pages saved for inspiration. Ships in Times New Roman.
+- [🧑‍💻 professional repo hoarder](https://somedayx.com/p/repo-hoarder/): Stars it. Bookmarks it. Never clones it.
+- [🧩 PM in denial](https://somedayx.com/p/pm-in-denial/): Saves every prioritisation framework. Prioritises nothing.
+- [📈 growth goblin](https://somedayx.com/p/growth-goblin/): Knows 37 viral hooks by heart. Posts twice a year.
+- [🤡 meme archivist](https://somedayx.com/p/meme-archivist/): The group chat's unofficial museum curator.
+- [🏏 armchair selector](https://somedayx.com/p/armchair-selector/): Would have picked a better XI. Has the receipts saved.
+- [🗂️ chief curator of the timeline](https://somedayx.com/p/chief-curator/): Saves a little of everything. A renaissance hoarder.

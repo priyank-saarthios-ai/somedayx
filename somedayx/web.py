@@ -133,6 +133,30 @@ def _home(source: str | None) -> dict:
             "throwback": throwback and _decorate([throwback])[0], "hints": hints}
 
 
+# Words that point to each Wrapped persona, for libraries without topic tags
+# (tags only exist when Gemma tl;drs are on). Keep the slugs in sync with
+# Wrapped.archetype in macapp/SomedayX.swift and PERSONAS in scripts/build_social.py.
+PERSONA_WORDS = {
+    "ai-agent-maximalist": "agent OR agents OR llm OR claude OR gpt OR openai OR prompt OR ai",
+    "founder-brain": "startup OR startups OR founder OR founders OR fundraising OR vc OR seed OR saas",
+    "design-snob": "design OR designer OR figma OR typography OR ui OR ux",
+    "repo-hoarder": "github OR repo OR developer OR developers OR coding OR engineer OR engineering",
+    "pm-in-denial": "pm OR roadmap OR prioritization OR \"product manager\"",
+    "growth-goblin": "marketing OR growth OR seo OR viral OR funnel",
+    "meme-archivist": "meme OR memes OR lol OR lmao OR joke OR funny",
+    "armchair-selector": "cricket OR football OR ipl OR wicket OR goal OR match",
+}
+
+
+def _persona_counts(source: str | None) -> dict[str, int]:
+    """How many saves mention each persona's words."""
+    saved = _saved(source, "t")
+    return {slug: _conn.execute(
+        f"""SELECT count(*) FROM posts_fts JOIN posts t ON t.id = posts_fts.id
+             WHERE posts_fts MATCH ? AND {saved}""", (words,)).fetchone()[0]
+        for slug, words in PERSONA_WORDS.items()}
+
+
 def _underdog(saved: str) -> dict | None:
     """The least-liked post you saved (not a reply): early-fan energy."""
     r = _conn.execute(
@@ -206,6 +230,7 @@ def _wrapped(source: str | None = None) -> dict:
         "median_likes": _median_likes(saved),
         "replies": one(f"SELECT count(*) FROM posts WHERE {saved} AND in_reply_to IS NOT NULL"),
         "topics": _top_tags(5, source),
+        "persona_counts": _persona_counts(source),
         "authors": _top_authors(5, source),
         "by_year": by_year,
         "viral": _decorate(hydrate(_conn, [viral[0]]))[0] if viral else None,

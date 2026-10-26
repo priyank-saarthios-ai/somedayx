@@ -320,6 +320,8 @@ struct Wrapped: Decodable, Equatable {
     let by_year: [String: Int]
     let viral: Post?
     let oldest: Post?
+    /// Saves mentioning each persona's words; used when there are no topic tags.
+    let persona_counts: [String: Int]?
     // Material for the random cards.
     let underdog: Underdog?
     let one_hit: Int?
@@ -347,24 +349,35 @@ struct Wrapped: Decodable, Equatable {
         return "one save every \(String(format: days < 10 ? "%.1f" : "%.0f", days)) days"
     }
 
-    /// A label for what someone saves, from their top topics.
-    var persona: String {
-        let archetypes: [([String], String)] = [
-            (["agent", "llm", "claude", "gpt", "openai", "vibe coding", "prompt", " ai", "ai "], "🤖 AI agent maximalist"),
-            (["startup", "founder", "venture", "fundrais", "saas"], "🚀 founder brain, unemployed thumbs"),
-            (["design", "figma", "typography"], "🎨 certified design snob"),
-            (["open source", "github", "developer", "coding", "engineering"], "🧑‍💻 professional repo hoarder"),
-            (["product"], "🧩 PM in denial"),
-            (["marketing", "growth", "seo"], "📈 growth goblin"),
-            (["humor", "meme", "comedy"], "🤡 meme archivist"),
-            (["cricket", "football", "sport"], "🏏 armchair selector"),
+    /// What someone saves, as a persona, from their top topics. Each has a
+    /// share page at somedayx.com/p/<slug> whose preview is that persona's
+    /// card; keep in sync with PERSONAS in scripts/build_social.py.
+    private var archetype: (label: String, slug: String) {
+        let archetypes: [([String], String, String)] = [
+            (["agent", "llm", "claude", "gpt", "openai", "vibe coding", "prompt", " ai", "ai "], "🤖 AI agent maximalist", "ai-agent-maximalist"),
+            (["startup", "founder", "venture", "fundrais", "saas"], "🚀 founder brain, unemployed thumbs", "founder-brain"),
+            (["design", "figma", "typography"], "🎨 certified design snob", "design-snob"),
+            (["open source", "github", "developer", "coding", "engineering"], "🧑‍💻 professional repo hoarder", "repo-hoarder"),
+            (["product"], "🧩 PM in denial", "pm-in-denial"),
+            (["marketing", "growth", "seo"], "📈 growth goblin", "growth-goblin"),
+            (["humor", "meme", "comedy"], "🤡 meme archivist", "meme-archivist"),
+            (["cricket", "football", "sport"], "🏏 armchair selector", "armchair-selector"),
         ]
         let top = topics.prefix(5).map { " \($0.tag) " }
-        for (keys, label) in archetypes where top.contains(where: { t in keys.contains { t.contains($0) } }) {
-            return label
+        for (keys, label, slug) in archetypes where top.contains(where: { t in keys.contains { t.contains($0) } }) {
+            return (label, slug)
         }
-        return "🗂️ chief curator of the timeline"
+        // No tags (tl;drs off): go by what the saves themselves talk about.
+        if let counts = persona_counts,
+           let best = archetypes.max(by: { counts[$0.2] ?? 0 < counts[$1.2] ?? 0 }),
+           let n = counts[best.2], n >= 5 {
+            return (best.1, best.2)
+        }
+        return ("🗂️ chief curator of the timeline", "chief-curator")
     }
+
+    var persona: String { archetype.label }
+    var personaSlug: String { archetype.slug }
 
     /// One-liners for the home card, a little roast-y.
     var facts: [String] {
@@ -498,7 +511,8 @@ struct WrapCard {
         let a = "aeiou".contains(persona.lowercased().first ?? "x") ? "an" : "a"
         let total = w.total.formatted()
         let since = w.firstYear.map { " since \($0)" } ?? ""
-        let cta = somedayxLink.map { "get your own wrapped (free, runs on your mac) → \($0)" }
+        // Links to the persona's page, so link previews show a matching card.
+        let cta = somedayxLink.map { "get your own wrapped (free, runs on your mac) → \($0)/p/\(w.personaSlug)" }
             ?? "made with somedayx. free, open source, 100% on your mac"
         func lines(_ n: Int) -> String { stats.prefix(n).map { "→ \($0.line)" }.joined(separator: "\n") }
         let templates: [(Int) -> String] = [
