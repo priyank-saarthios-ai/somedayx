@@ -126,6 +126,7 @@ def share_page(slug, emoji, name, roast, c1, c2) -> str:
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
 <link rel="canonical" href="{url}">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="664a070a-3b3c-4188-a8e2-406e4eaaa0fb"></script>
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/icon-32.png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
@@ -169,7 +170,7 @@ def share_page(slug, emoji, name, roast, c1, c2) -> str:
   <h1>Someone's X bookmarks say they're {a} {html.escape(name)} {emoji}</h1>
   <p>{html.escape(roast)}</p>
   <p>SomedayX searches everything you've bookmarked or liked on X by meaning, even inside images, from your Mac's menu bar. Then it roasts you. Free, open source, and it never leaves your Mac.</p>
-  <a class="btn" href="/">Find out what yours say →</a>
+  <a class="btn" href="/" data-umami-event="persona-cta">Find out what yours say →</a>
   <div class="more">Other personas<div>{others}</div></div>
 </div>
 </body>
