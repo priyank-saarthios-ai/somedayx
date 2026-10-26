@@ -14,6 +14,8 @@
 
 ## Pages
 - [Home](https://somedayx.com/): what it is, install, FAQ
+- [Best X (Twitter) bookmark managers in 2026: SomedayX vs Dewey vs Tweetsmash vs Twillot](https://somedayx.com/compare/x-bookmark-managers/): An honest comparison of tools for searching your X bookmarks: price, where your data lives, meaning-based search, screenshots and likes. Includes free and private options.
+- [How to search your X (Twitter) bookmarks in 2026](https://somedayx.com/guides/search-x-bookmarks/): X's bookmark search only matches exact words in a post's text. Here's how to search your bookmarks and likes properly, including by meaning and inside screenshots, plus how to export them.
 - [Source code and install guide](https://github.com/priyank-saarthios-ai/somedayx)
 
 ## Wrapped personas

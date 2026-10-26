@@ -178,6 +178,124 @@ def share_page(slug, emoji, name, roast, c1, c2) -> str:
 """
 
 
+def article_card(kicker: str, title: str) -> str:
+    return f"""<style>{CARD_CSS}
+      .frame {{ {glow('#1d9bf0', '#7856ff')} }}
+      .kicker {{ margin-top: 70px; font-size: 26px; font-weight: 700; color: #1d9bf0; text-transform: uppercase; letter-spacing: 2px; }}
+      h1 {{ margin-top: 18px; font-size: 68px; line-height: 1.05; letter-spacing: -2px; font-weight: 900; max-width: 1000px; }}
+    </style>
+    <div class='frame'>
+      <div class='logo'>{LOGO_SVG.format(bg='#fff', fg='#000')}SomedayX</div>
+      <div class='kicker'>{html.escape(kicker)}</div>
+      <h1>{html.escape(title)}</h1>
+      <div class='url'>somedayx.com · free &amp; open source</div>
+    </div>"""
+
+
+# Long-form pages (guides, comparisons) live in scripts/pages/*.html: a header
+# comment of `key: value` lines, then the article body. The build wraps each
+# in the site's look, metadata, JSON-LD (Article + its FAQ) and a preview card.
+PAGES_SRC = Path(__file__).resolve().parent / "pages"
+
+
+def load_pages() -> list[dict]:
+    pages = []
+    for f in sorted(PAGES_SRC.glob("*.html")):
+        head, body = re.match(r"\s*<!--(.*?)-->(.*)", f.read_text(), re.S).groups()
+        meta = dict(l.split(":", 1) for l in head.strip().splitlines())
+        meta = {k.strip(): v.strip() for k, v in meta.items()}
+        pages.append({**meta, "name": f.stem, "body": body.strip(), "url": f"{BASE}/{meta['path']}/"})
+    return pages
+
+
+def article_page(pg: dict) -> str:
+    strip = lambda t: html.unescape(re.sub(r"<[^>]+>", "", t)).strip()
+    faq = re.findall(r"<details><summary>(.*?)</summary>(.*?)</details>", pg["body"], re.S)
+    img = f"{BASE}/img/og/{pg['name']}.png"
+    graph = [
+        {"@type": "Article", "headline": pg["title"], "description": pg["description"], "image": img,
+         "datePublished": pg["published"], "dateModified": pg["updated"], "mainEntityOfPage": pg["url"],
+         "author": {"@type": "Person", "name": "Priyank Mehta", "url": "https://x.com/priyankmmehta"},
+         "publisher": {"@id": f"{BASE}/#site"}, "about": {"@id": f"{BASE}/#app"}},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "SomedayX", "item": f"{BASE}/"},
+            {"@type": "ListItem", "position": 2, "name": pg["crumb"], "item": pg["url"]}]},
+    ]
+    if faq:
+        graph.append({"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": strip(q), "acceptedAnswer": {"@type": "Answer", "text": strip(a)}}
+            for q, a in faq]})
+    jsonld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
+    updated = f"{int(pg['updated'][8:])} {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][int(pg['updated'][5:7]) - 1]} {pg['updated'][:4]}"
+    others = "".join(f"<a href='/{o['path']}/'>{html.escape(o['card'])}</a>" for o in load_pages() if o["name"] != pg["name"])
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html.escape(pg['title'])}</title>
+<meta name="description" content="{html.escape(pg['description'])}">
+<link rel="canonical" href="{pg['url']}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="664a070a-3b3c-4188-a8e2-406e4eaaa0fb"></script>
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/icon-32.png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SomedayX">
+<meta property="og:title" content="{html.escape(pg['title'])}">
+<meta property="og:description" content="{html.escape(pg['description'])}">
+<meta property="og:url" content="{pg['url']}">
+<meta property="og:image" content="{img}">
+<meta property="og:image:width" content="{OG_W}"><meta property="og:image:height" content="{OG_H}">
+<meta property="article:modified_time" content="{pg['updated']}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{html.escape(pg['title'])}">
+<meta name="twitter:description" content="{html.escape(pg['description'])}">
+<meta name="twitter:image" content="{img}">
+<meta name="twitter:creator" content="@priyankmmehta">
+<script type="application/ld+json">{jsonld}</script>
+<style>
+  * {{ box-sizing: border-box; margin: 0; }}
+  body {{ background: #000; color: #e7e9ea; font: 17px/1.65 {FONT}; -webkit-font-smoothing: antialiased; }}
+  .wrap {{ max-width: 760px; margin: 0 auto; padding: 32px 20px 70px; }}
+  a {{ color: #1d9bf0; }}
+  .logo {{ display: inline-flex; gap: 10px; align-items: center; font-weight: 800; text-decoration: none; color: #e7e9ea; }}
+  .logo img {{ width: 28px; height: 28px; }}
+  .meta {{ margin-top: 34px; color: #71767b; font-size: 14px; }}
+  h1 {{ font-size: clamp(30px, 6vw, 44px); letter-spacing: -.03em; line-height: 1.1; margin-top: 8px; }}
+  h2 {{ font-size: 25px; letter-spacing: -.02em; line-height: 1.25; margin-top: 44px; }}
+  h3 {{ font-size: 19px; margin-top: 28px; }}
+  p, li {{ color: #c4c8cc; }} p {{ margin-top: 14px; }}
+  ul, ol {{ margin-top: 12px; padding-left: 22px; }} li {{ margin-top: 6px; }}
+  strong {{ color: #e7e9ea; }}
+  code {{ font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: #16181c; padding: 2px 6px; border-radius: 6px; }}
+  .answer {{ margin-top: 20px; padding: 16px 18px; border-left: 3px solid #1d9bf0; background: #0b0b0c; border-radius: 0 12px 12px 0; }}
+  .answer p:first-child {{ margin-top: 0; }}
+  .scroll {{ overflow-x: auto; margin-top: 18px; border: 1px solid #2f3336; border-radius: 12px; }}
+  table {{ border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }}
+  th, td {{ text-align: left; padding: 10px 12px; border-bottom: 1px solid #2f3336; vertical-align: top; color: #c4c8cc; }}
+  th {{ color: #e7e9ea; background: #0b0b0c; }} tr:last-child td {{ border-bottom: 0; }}
+  details {{ margin-top: 10px; border: 1px solid #2f3336; border-radius: 12px; padding: 12px 16px; }}
+  summary {{ cursor: pointer; font-weight: 700; color: #e7e9ea; }}
+  .btn {{ display: inline-block; margin-top: 22px; padding: 13px 22px; border-radius: 999px; font-weight: 700;
+         background: #e7e9ea; color: #000; text-decoration: none; }}
+  .note {{ font-size: 14px; color: #71767b; }}
+  .more {{ margin-top: 50px; padding-top: 20px; border-top: 1px solid #2f3336; color: #71767b; font-size: 14px; }}
+  .more a {{ margin-right: 16px; }}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="logo" href="/"><img src="/icon-192.png" alt="">SomedayX</a>
+  <div class="meta">{html.escape(pg['crumb'])} · Updated <time datetime="{pg['updated']}">{updated}</time> · by <a href="https://x.com/priyankmmehta">Priyank Mehta</a></div>
+{pg['body']}
+  <div class="more">More: <a href="/">SomedayX home</a>{others}<a href="https://github.com/priyank-saarthios-ai/somedayx">Source on GitHub</a></div>
+</div>
+</body>
+</html>
+"""
+
+
 DEMO_HTML = """<!doctype html><html><head><meta charset="utf-8"><style>
 * { margin: 0; box-sizing: border-box; }
 body { width: 1280px; height: 720px; overflow: hidden; color: #e7e9ea; font-family: FONT;
@@ -262,8 +380,9 @@ def record_demo(browser) -> None:
 
 
 def sitemap() -> None:
-    urls = [f"{BASE}/"] + [f"{BASE}/p/{slug}/" for slug, *_ in PERSONAS]
-    body = "".join(f"<url><loc>{u}</loc></url>" for u in urls)
+    urls = [(f"{BASE}/", "")] + [(pg["url"], pg["updated"]) for pg in load_pages()]
+    urls += [(f"{BASE}/p/{slug}/", "") for slug, *_ in PERSONAS]
+    body = "".join(f"<url><loc>{u}</loc>{f'<lastmod>{d}</lastmod>' if d else ''}</url>" for u, d in urls)
     (SITE / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>\n')
 
@@ -282,8 +401,10 @@ def structured_data() -> None:
          "applicationCategory": "UtilitiesApplication", "operatingSystem": "macOS 14 or later",
          "softwareVersion": "1.0", "isAccessibleForFree": True, "license": "https://opensource.org/licenses/MIT",
          "downloadUrl": "https://github.com/priyank-saarthios-ai/somedayx",
+         "sameAs": ["https://github.com/priyank-saarthios-ai/somedayx"],
          "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
-         "author": {"@type": "Person", "name": "Priyank Mehta", "url": "https://x.com/priyankmmehta"},
+         "author": {"@type": "Person", "name": "Priyank Mehta", "url": "https://x.com/priyankmmehta",
+                    "sameAs": ["https://x.com/priyankmmehta", "https://github.com/priyank-saarthios-ai"]},
          "video": {"@type": "VideoObject", "name": "SomedayX demo: search your X bookmarks by meaning",
                    "description": "Double-tap Option, type what you remember, and SomedayX finds the post.",
                    "thumbnailUrl": f"{BASE}/media/demo.jpg", "contentUrl": f"{BASE}/media/demo.mp4",
@@ -302,6 +423,7 @@ def structured_data() -> None:
 
 def text_files() -> None:
     (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n")
+    guides = "".join(f"- [{pg['title']}]({pg['url']}): {pg['description']}\n" for pg in load_pages())
     personas = "\n".join(f"- [{e} {n}]({BASE}/p/{s}/): {roast}" for s, e, n, roast, *_ in PERSONAS)
     # llms.txt: a plain summary for AI assistants and answer engines (llmstxt.org).
     (SITE / "llms.txt").write_text(f"""# SomedayX
@@ -320,7 +442,7 @@ def text_files() -> None:
 
 ## Pages
 - [Home]({BASE}/): what it is, install, FAQ
-- [Source code and install guide](https://github.com/priyank-saarthios-ai/somedayx)
+{guides}- [Source code and install guide](https://github.com/priyank-saarthios-ai/somedayx)
 
 ## Wrapped personas
 {personas}
@@ -338,6 +460,11 @@ def main() -> None:
             out = SITE / "p" / slug / "index.html"
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(share_page(slug, emoji, name, roast, c1, c2))
+        for pg in load_pages():
+            render(page, article_card(pg["kicker"], pg["card"]), SITE / "img" / "og" / f"{pg['name']}.png")
+            out = SITE / pg["path"] / "index.html"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(article_page(pg))
         icons(page)
         if "--no-video" not in sys.argv:
             record_demo(browser)
@@ -345,7 +472,7 @@ def main() -> None:
     sitemap()
     structured_data()
     text_files()
-    print("Built: og images, persona pages, icons, sitemap" + ("" if "--no-video" in sys.argv else ", demo video"))
+    print("Built: og images, persona pages, guides, icons, sitemap" + ("" if "--no-video" in sys.argv else ", demo video"))
 
 
 if __name__ == "__main__":

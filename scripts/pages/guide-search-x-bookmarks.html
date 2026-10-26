@@ -1,0 +1,66 @@
+<!--
+path: guides/search-x-bookmarks
+crumb: Guide
+kicker: Guide · 2026
+card: How to search your X (Twitter) bookmarks
+title: How to search your X (Twitter) bookmarks in 2026
+description: X's bookmark search only matches exact words in a post's text. Here's how to search your bookmarks and likes properly, including by meaning and inside screenshots, plus how to export them.
+published: 2026-10-27
+updated: 2026-10-27
+-->
+  <h1>How to search your X (Twitter) bookmarks in 2026</h1>
+
+  <div class="answer">
+    <p><strong>Short answer:</strong> on the web and iPhone, open <strong>Bookmarks</strong> and use the search bar at the top. It's free, but it only finds posts containing the exact words you type, it doesn't look inside images, and it doesn't search your likes. To find a post by what it was <em>about</em> ("that thread about pricing"), or by text in a screenshot, use a tool that indexes your saves, such as <a href="/">SomedayX</a>, a free Mac app that does it on your own computer.</p>
+  </div>
+
+  <h2>1. Use X's built-in bookmark search</h2>
+  <ol>
+    <li>On x.com or the X app for iPhone, open <strong>Bookmarks</strong> from the side menu.</li>
+    <li>Tap the search bar at the top and type words you remember from the post.</li>
+  </ol>
+  <p>This is free on every account. Bookmark <strong>folders</strong> are a paid feature that needs X Premium.</p>
+
+  <h3>Why it often finds nothing</h3>
+  <ul>
+    <li><strong>Exact words only.</strong> You remember the idea, not the wording. Search "pricing advice" and you'll miss the post that said "how we raised our prices".</li>
+    <li><strong>Screenshots are invisible.</strong> A lot of what people save is images: charts, slides, screenshots of articles. Their text isn't searchable.</li>
+    <li><strong>Likes are separate.</strong> If you "saved" something by liking it, bookmark search won't see it.</li>
+    <li><strong>Old saves are hard to reach.</strong> With thousands of bookmarks, scrolling back years is slow, and some users report the list stops loading well before the end.</li>
+  </ul>
+
+  <h2>2. Tips that make X's own search work better</h2>
+  <ul>
+    <li>Search for an <strong>unusual word</strong> the post must have contained (a product name, a number, a person) rather than a general topic.</li>
+    <li>Try <strong>several phrasings</strong>: "price", "pricing", "raised prices".</li>
+    <li>If you remember who posted it, open their profile and use X's main search with <code>from:handle keyword</code>.</li>
+  </ul>
+
+  <h2>3. Search your bookmarks by meaning</h2>
+  <p>Meaning-based (semantic) search turns each post into a numeric "fingerprint" of what it's about, so a search for "pricing advice" also finds "we doubled our price and churn went down". Several tools offer this. The difference is mostly <strong>where your data goes</strong>: most are browser extensions with a cloud account; a few keep everything on your device. See our <a href="/compare/x-bookmark-managers/">comparison of X bookmark tools</a>.</p>
+
+  <h3>With SomedayX (free, Mac, on-device)</h3>
+  <ol>
+    <li>Install it from <a href="/#install">somedayx.com</a> (macOS 14 or newer, Homebrew, one terminal command).</li>
+    <li>Log in to X once in SomedayX's own browser window. It reads your Bookmarks and Likes, read-only.</li>
+    <li>Double-tap <strong>Option</strong> anywhere and type what you remember: "that thread about pricing", "screenshot of a dashboard", "from:paulg startups".</li>
+  </ol>
+  <p>It reads the text inside images with Apple's on-device OCR, includes the full text of X Articles, and searches bookmarks and likes together. The search model (Google's EmbeddingGemma) runs on your Mac, so your saves never leave it. Filters like <code>from:handle</code>, <code>has:image</code>, <code>is:like</code> and <code>year:2024</code> also work.</p>
+  <a class="btn" href="/" data-umami-event="guide-cta">Get SomedayX, free →</a>
+
+  <h2>4. How to export your X bookmarks</h2>
+  <ul>
+    <li><strong>X's data archive</strong> (Settings → Your account → Download an archive) includes your posts and likes; according to third-party guides it does <strong>not</strong> include bookmarks.</li>
+    <li><strong>twitter-web-exporter</strong> is a free, open-source browser userscript that exports bookmarks and likes from the X website to JSON or CSV, locally.</li>
+    <li><strong>Bookmark managers</strong> such as Dewey and Tweetsmash export to CSV, Notion and others, usually on paid plans.</li>
+    <li><strong>The X API</strong> has a bookmarks endpoint billed per read; several tool makers report it only returns your most recent ~800 bookmarks.</li>
+    <li><strong>SomedayX</strong> stores everything in a SQLite database on your Mac that you can open with any SQLite tool.</li>
+  </ul>
+
+  <h2>FAQ</h2>
+  <details><summary>Can I search my X bookmarks for free?</summary><p>Yes. The search bar on the Bookmarks page is free on the web and iPhone, but it only matches exact words in the post text. SomedayX is a free, open-source alternative that searches by meaning and inside images, on your Mac.</p></details>
+  <details><summary>Can I search inside screenshots I bookmarked on X?</summary><p>Not with X's own search. SomedayX reads the text in saved images with Apple's on-device OCR, so a search like "screenshot of a pricing table" finds them.</p></details>
+  <details><summary>How do I search posts I liked on X?</summary><p>X's bookmark search doesn't cover likes. SomedayX indexes your likes alongside your bookmarks; use <code>is:like</code> to search only likes.</p></details>
+  <details><summary>Do I need X Premium to search bookmarks?</summary><p>No. Basic keyword search in Bookmarks is free. Premium adds bookmark folders.</p></details>
+
+  <p class="note" style="margin-top:30px">SomedayX is unofficial and not affiliated with X Corp. Facts about X were checked on 27 Oct 2026; X changes often. Spot something out of date? <a href="https://github.com/priyank-saarthios-ai/somedayx/issues">Tell us on GitHub</a>.</p>
