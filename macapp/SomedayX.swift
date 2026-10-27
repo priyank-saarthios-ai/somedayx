@@ -3292,6 +3292,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     let optionTapItem = NSMenuItem(title: "Turn On Double-Tap ⌥…", action: #selector(openAccessibilitySettings), keyEquivalent: "")
     let writerItem = NSMenuItem(title: "Write tl;drs with Gemma", action: #selector(toggleWriter), keyEquivalent: "")
     let mcpItem = NSMenuItem(title: "Let AI Apps Search My Saves", action: #selector(toggleMCP), keyEquivalent: "")
+    let claudeItem = NSMenuItem(title: "", action: #selector(connectClaudeDesktop), keyEquivalent: "")
+    let chatgptItem = NSMenuItem(title: "", action: #selector(connectChatGPT), keyEquivalent: "")
+    let cursorItem = NSMenuItem(title: "", action: #selector(connectCursor), keyEquivalent: "")
+    let claudeCodeItem = NSMenuItem(title: "", action: #selector(copyClaudeCodeCommand), keyEquivalent: "")
     var server: Process?
     var serverRestarts: [Date] = []
     var quitting = false
@@ -3608,11 +3612,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         menu.addItem(.separator())
         menu.addItem(writerItem)
         let ai = NSMenu()
+        ai.autoenablesItems = false  // apps that aren't installed stay greyed out
         ai.addItem(mcpItem)
         ai.addItem(.separator())
-        ai.addItem(NSMenuItem(title: "Connect Claude Desktop", action: #selector(connectClaudeDesktop), keyEquivalent: ""))
-        ai.addItem(NSMenuItem(title: "Connect Cursor", action: #selector(connectCursor), keyEquivalent: ""))
-        ai.addItem(NSMenuItem(title: "Copy Claude Code Command", action: #selector(copyClaudeCodeCommand), keyEquivalent: ""))
+        ai.addItem(claudeItem)
+        ai.addItem(chatgptItem)
+        ai.addItem(cursorItem)
+        ai.addItem(claudeCodeItem)
         ai.addItem(NSMenuItem(title: "Copy Setup for Other Apps", action: #selector(copyMCPConfig), keyEquivalent: ""))
         ai.addItem(.separator())
         ai.addItem(NSMenuItem(title: "How It Works…", action: #selector(openMCPHelp), keyEquivalent: ""))
@@ -3646,6 +3652,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         writerItem.state = store.brain?.writer_on == true ? .on : .off
         writerItem.isEnabled = store.brain != nil && store.brain?.writer.busy != true
         mcpItem.state = mcpOn ? .on : .off
+        for (item, title, found) in [(claudeItem, "Connect Claude Desktop", hasClaudeDesktop),
+                                     (chatgptItem, "Connect ChatGPT Desktop & Codex", hasChatGPTOrCodex),
+                                     (cursorItem, "Connect Cursor", hasCursor),
+                                     (claudeCodeItem, "Copy Claude Code Command", hasClaudeCode)] {
+            item.title = found ? title : "\(title) (not installed)"
+            item.isEnabled = found
+        }
         optionTapItem.isHidden = AXIsProcessTrusted()
         UNUserNotificationCenter.current().getNotificationSettings { s in
             DispatchQueue.main.async {
@@ -3968,11 +3981,67 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     }
 
     @objc func connectClaudeDesktop() {
+        guard hasClaudeDesktop else { return }
         connectApp("Claude", FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support/Claude/claude_desktop_config.json"))
     }
 
+    // Whether an AI app is installed, found without ever running it: running
+    // a tool just to see if it's there can trigger macOS security warnings.
+    var home: URL { FileManager.default.homeDirectoryForCurrentUser }
+
+    func appInstalled(_ bundleID: String, _ name: String) -> Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) != nil
+            || ["/Applications", home.appendingPathComponent("Applications").path]
+                .contains { FileManager.default.fileExists(atPath: "\($0)/\(name).app") }
+    }
+
+    func homeHas(_ paths: String...) -> Bool {
+        paths.contains { FileManager.default.fileExists(atPath: home.appendingPathComponent($0).path) }
+    }
+
+    var hasClaudeDesktop: Bool { appInstalled("com.anthropic.claudefordesktop", "Claude") }
+    var hasCursor: Bool { appInstalled("com.todesktop.230313mzl4w4u92", "Cursor") }
+    var hasChatGPTOrCodex: Bool { appInstalled("com.openai.chat", "ChatGPT") || homeHas(".codex") }
+    var hasClaudeCode: Bool {
+        homeHas(".claude", ".local/bin/claude")
+            || ["/opt/homebrew/bin/claude", "/usr/local/bin/claude"].contains { FileManager.default.fileExists(atPath: $0) }
+    }
+
+    /// The ChatGPT desktop app, Codex CLI and Codex IDE extension share
+    /// ~/.codex/config.toml (TOML). chatgpt.com and the phone apps can't run
+    /// local MCP servers, so they're not covered.
+    @objc func connectChatGPT() {
+        guard hasChatGPTOrCodex, confirmMCP() else { return }
+        let fm = FileManager.default
+        let url = home.appendingPathComponent(".codex/config.toml")
+        var text = ""
+        if fm.fileExists(atPath: url.path) {
+            guard let existing = try? String(contentsOf: url, encoding: .utf8) else {
+                _ = alert("Couldn't connect ChatGPT & Codex", "SomedayX couldn't read \(url.path), so it left it alone.")
+                return
+            }
+            text = existing
+            try? fm.removeItem(at: url.appendingPathExtension("somedayx-backup"))
+            try? fm.copyItem(at: url, to: url.appendingPathExtension("somedayx-backup"))
+        }
+        do {
+            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            guard let updated = codexConfig(text, command: mcpLauncher) else {
+                _ = alert("Couldn't connect ChatGPT & Codex",
+                          "\(url.path) already sets up SomedayX in a way SomedayX can't safely edit. Remove that entry, then try again, or use Copy Setup for Other Apps.")
+                return
+            }
+            try updated.write(to: url, atomically: true, encoding: .utf8)
+            _ = alert("Connected to ChatGPT desktop & Codex",
+                      "Quit and reopen the ChatGPT desktop app, or start a new Codex session. SomedayX shows up under Settings → MCP servers.\n\nchatgpt.com in a browser and the ChatGPT phone apps can't use it: they only connect to servers on the internet.")
+        } catch {
+            _ = alert("Couldn't connect ChatGPT & Codex", error.localizedDescription)
+        }
+    }
+
     @objc func connectCursor() {
+        guard hasCursor else { return }
         connectApp("Cursor", FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".cursor/mcp.json"))
     }
 
@@ -4005,7 +4074,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     }
 
     @objc func copyClaudeCodeCommand() {
-        guard confirmMCP() else { return }
+        guard hasClaudeCode, confirmMCP() else { return }
         copy("claude mcp add --scope user somedayx -- '\(mcpLauncher)'")
         _ = alert("Copied", "Paste it in your terminal to add SomedayX to Claude Code.")
     }
@@ -4040,6 +4109,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
             notify("Couldn't change Open at Login", error.localizedDescription)
         }
     }
+}
+
+/// Adds or replaces only the [mcp_servers.somedayx] table in a Codex
+/// config.toml, leaving everything else exactly as it was. nil when SomedayX
+/// is already set up some other way (dotted or inline keys) that a plain
+/// edit could break.
+func codexConfig(_ text: String, command: String) -> String? {
+    let quoted = command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    let table = ["[mcp_servers.somedayx]", "command = \"\(quoted)\"", "args = []"]
+    var lines = text.components(separatedBy: "\n")
+    let trimmed = { (i: Int) in lines[i].trimmingCharacters(in: .whitespaces) }
+    let isOurHeader = { (i: Int) in trimmed(i) == "[mcp_servers.somedayx]" || trimmed(i) == "[mcp_servers.\"somedayx\"]" }
+    let otherForm = lines.indices.contains { i in
+        !isOurHeader(i) && (lines[i].range(of: #"mcp_servers\s*\.\s*"?somedayx"?"#, options: .regularExpression) != nil
+                            || lines[i].range(of: #"^\s*"?somedayx"?\s*="#, options: .regularExpression) != nil)
+    }
+    if otherForm { return nil }
+    if let start = lines.indices.first(where: isOurHeader) {
+        var end = start + 1
+        while end < lines.count && !trimmed(end).hasPrefix("[") { end += 1 }
+        while end > start + 1 && trimmed(end - 1).isEmpty { end -= 1 }  // keep the blank line before the next table
+        lines.replaceSubrange(start..<end, with: table)
+        return lines.joined(separator: "\n")
+    }
+    var out = text
+    if !out.isEmpty && !out.hasSuffix("\n") { out += "\n" }
+    if !out.isEmpty { out += "\n" }
+    return out + table.joined(separator: "\n") + "\n"
 }
 
 func appLog(_ message: String) {

@@ -399,7 +399,7 @@ def structured_data() -> None:
                         "from your Mac's menu bar. Runs 100% on-device with EmbeddingGemma.",
          "url": f"{BASE}/", "image": f"{BASE}/img/og.png", "screenshot": f"{BASE}/img/card-11.jpg",
          "applicationCategory": "UtilitiesApplication", "operatingSystem": "macOS 14 or later",
-         "softwareVersion": "1.1", "isAccessibleForFree": True, "license": "https://opensource.org/licenses/MIT",
+         "softwareVersion": "1.1.1", "isAccessibleForFree": True, "license": "https://opensource.org/licenses/MIT",
          "downloadUrl": "https://github.com/priyank-saarthios-ai/somedayx",
          "sameAs": ["https://github.com/priyank-saarthios-ai/somedayx"],
          "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
@@ -438,7 +438,7 @@ def text_files() -> None:
 - Filters: from:handle, is:bookmark, is:like, has:image, has:video, has:link, has:article, year:2025, since:, until:.
 - How it gets your saves: it opens its own browser window where you log in to X once, then reads your Bookmarks and Likes read-only, the way the X website loads them. Unofficial; not affiliated with X Corp.
 - SomedayX Wrapped: a shareable card that roasts your saving habits and gives you a persona.
-- MCP server for AI apps (Claude Desktop, Claude Code, Cursor): read-only tools search_saves, recent_saves, get_post, library_overview. Off by default; turn on in the menu bar under AI Apps (MCP). Guide: {BASE}/guides/mcp/
+- MCP server for AI apps (Claude Desktop, Claude Code, the ChatGPT desktop app for Mac, Codex CLI/IDE, Cursor; not chatgpt.com in a browser or the ChatGPT phone apps): read-only tools search_saves, recent_saves, get_post, library_overview. Off by default; turn on in the menu bar under AI Apps (MCP). Guide: {BASE}/guides/mcp/
 - Made by Priyank Mehta (https://x.com/priyankmmehta).
 
 ## Pages

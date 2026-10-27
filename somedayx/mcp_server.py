@@ -1,5 +1,5 @@
 """SomedayX as an MCP server (stdio), so AI apps like Claude Desktop, Claude
-Code and Cursor can search your saves.
+Code, the ChatGPT desktop app, Codex and Cursor can search your saves.
 
     python -m somedayx mcp
 
@@ -36,7 +36,7 @@ server = MCPServer(
         "images), recent_saves for what they saved lately, get_post for one post in full (including X Article "
         "text), and library_overview to understand the library. Always cite posts by their url."),
     website_url="https://somedayx.com",
-    version="1.1.0",
+    version="1.1.1",
 )
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 

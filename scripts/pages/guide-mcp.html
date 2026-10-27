@@ -2,16 +2,16 @@
 path: guides/mcp
 crumb: Guide
 kicker: Guide · MCP
-card: Search your X bookmarks from Claude, Cursor and other AI apps
-title: X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps
-description: SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here's how to connect it.
+card: Search your X bookmarks from Claude, ChatGPT desktop, Codex & Cursor
+title: X (Twitter) bookmarks MCP server: search your saves from Claude, the ChatGPT desktop app, Codex and Cursor
+description: SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, the ChatGPT desktop app, Codex, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here's how to connect it.
 published: 2026-10-27
 updated: 2026-10-27
 -->
-  <h1>Search your X bookmarks from Claude, Cursor and other AI apps (MCP)</h1>
+  <h1>Search your X bookmarks from Claude, the ChatGPT desktop app, Codex and Cursor (MCP)</h1>
 
   <div class="answer">
-    <p><strong>Short answer:</strong> install <a href="/">SomedayX</a> (free, Mac), click its menu bar icon → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, then choose <strong>Connect Claude Desktop</strong>, <strong>Connect Cursor</strong> or <strong>Copy Claude Code Command</strong>. Your AI app can then search everything you've bookmarked or liked on X, by meaning and inside screenshots. It's read-only and off until you turn it on.</p>
+    <p><strong>Short answer:</strong> install <a href="/">SomedayX</a> (free, Mac), click its menu bar icon → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, then choose <strong>Connect Claude Desktop</strong>, <strong>Connect ChatGPT Desktop &amp; Codex</strong>, <strong>Connect Cursor</strong> or <strong>Copy Claude Code Command</strong>. Your AI app can then search everything you've bookmarked or liked on X, by meaning and inside screenshots. It's read-only and off until you turn it on. ChatGPT works in the desktop app for Mac and Codex, not in chatgpt.com in a browser.</p>
   </div>
 
   <h2>What you can ask</h2>
@@ -29,11 +29,14 @@ updated: 2026-10-27
     <li>In the same menu:
       <ul>
         <li><strong>Connect Claude Desktop</strong> or <strong>Connect Cursor</strong>: SomedayX adds itself to that app's MCP settings (keeping a backup). Quit and reopen the app.</li>
+        <li><strong>Connect ChatGPT Desktop &amp; Codex</strong>: SomedayX adds itself to <code>~/.codex/config.toml</code>, which the ChatGPT desktop app, Codex CLI and Codex IDE extension share (keeping a backup). Reopen ChatGPT or start a new Codex session; it appears under Settings → MCP servers.</li>
         <li><strong>Copy Claude Code Command</strong>, then paste it in your terminal:<br><code>claude mcp add --scope user somedayx -- ~/Applications/SomedayX.app/Contents/Resources/somedayx-mcp</code></li>
         <li><strong>Copy Setup for Other Apps</strong>: the JSON config for any app that supports local (stdio) MCP servers.</li>
       </ul>
     </li>
   </ol>
+  <p>Apps that aren't installed show as "(not installed)". SomedayX checks without running them, so you won't see security warnings.</p>
+  <p><strong>ChatGPT:</strong> SomedayX works in the <strong>ChatGPT desktop app for Mac</strong> and in <strong>Codex</strong> (CLI and IDE extension). It does <strong>not</strong> work in chatgpt.com in a browser or in the ChatGPT phone apps: those can only connect to MCP servers on the internet, and SomedayX keeps your saves on your Mac.</p>
 
   <h2>Tools it gives your AI app</h2>
   <div class="scroll"><table>
@@ -48,12 +51,13 @@ updated: 2026-10-27
   <ul>
     <li><strong>Off by default.</strong> Until you turn it on, the server refuses every request. Turn it off in the same menu and it stops answering at once.</li>
     <li><strong>Read-only.</strong> It opens your library read-only and can't sync, post, like, or touch your X login.</li>
-    <li><strong>Your AI app sees what it asks for.</strong> Cloud-based apps (Claude, Cursor) send the posts they read to their servers to answer you. Your saves stay on your Mac unless you connect one.</li>
+    <li><strong>Your AI app sees what it asks for.</strong> Cloud-based apps (Claude, ChatGPT, Codex, Cursor) send the posts they read to their servers to answer you. Your saves stay on your Mac unless you connect one.</li>
     <li><strong>Works without the app open.</strong> It shares SomedayX's on-device search model rather than loading a second copy, and the model frees its memory when idle.</li>
   </ul>
 
   <h2>FAQ</h2>
-  <details><summary>Is there an MCP server for X (Twitter) bookmarks?</summary><p>Yes. SomedayX includes a free, open-source, read-only MCP server that lets Claude Desktop, Claude Code, Cursor and other MCP apps search your X bookmarks and likes by meaning, on your Mac.</p></details>
+  <details><summary>Is there an MCP server for X (Twitter) bookmarks?</summary><p>Yes. SomedayX includes a free, open-source, read-only MCP server that lets Claude Desktop, Claude Code, the ChatGPT desktop app, Codex, Cursor and other MCP apps search your X bookmarks and likes by meaning, on your Mac.</p></details>
+  <details><summary>Does it work with ChatGPT?</summary><p>Yes, in the ChatGPT desktop app for Mac and in Codex (CLI and IDE extension). Not in chatgpt.com in a browser or the ChatGPT phone apps, which only connect to MCP servers on the internet; SomedayX keeps your saves on your Mac.</p></details>
   <details><summary>Does it need the X API or an API key?</summary><p>No. SomedayX reads your saves into a local library on your Mac, and the MCP server searches that library. No X API, no API key, no account.</p></details>
   <details><summary>Does the SomedayX app need to be open?</summary><p>No. Your AI app starts the server when it needs it. SomedayX keeps your library up to date when it syncs.</p></details>
   <details><summary>Can my AI app change or post anything?</summary><p>No. Every tool is read-only, and the server opens the database read-only.</p></details>

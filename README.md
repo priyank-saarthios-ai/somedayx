@@ -47,14 +47,16 @@ SomedayX syncs every night at 3 AM (and whenever you press sync). Right-click th
 
 ## Use it from AI apps (MCP)
 
-SomedayX includes an [MCP](https://modelcontextprotocol.io) server, so Claude Desktop, Claude Code, Cursor and other MCP apps can search your saves: *"find the posts I saved about pricing and summarise the advice"*.
+SomedayX includes an [MCP](https://modelcontextprotocol.io) server, so Claude Desktop, Claude Code, the ChatGPT desktop app, Codex, Cursor and other MCP apps can search your saves: *"find the posts I saved about pricing and summarise the advice"*.
 
 1. Click the SomedayX menu bar icon → **AI Apps (MCP)** → **Let AI Apps Search My Saves**. It's off until you turn it on.
-2. In the same menu, choose **Connect Claude Desktop** or **Connect Cursor** (then reopen that app), or **Copy Claude Code Command**, which copies:
+2. In the same menu, choose **Connect Claude Desktop**, **Connect ChatGPT Desktop & Codex** or **Connect Cursor** (then reopen that app), or **Copy Claude Code Command**, which copies:
    ```
    claude mcp add --scope user somedayx -- ~/Applications/SomedayX.app/Contents/Resources/somedayx-mcp
    ```
-   For other apps, **Copy Setup for Other Apps** copies the JSON config. It's a local stdio server.
+   For other apps, **Copy Setup for Other Apps** copies the JSON config. It's a local stdio server. Apps that aren't installed show as "(not installed)"; SomedayX checks without running them.
+
+**ChatGPT:** works in the **ChatGPT desktop app for Mac** and **Codex** (CLI and IDE extension), which share `~/.codex/config.toml`. It does **not** work in chatgpt.com in a browser or the ChatGPT phone apps: those can only reach MCP servers on the internet, and SomedayX keeps your saves on your Mac.
 
 | Tool | What it does |
 |---|---|
