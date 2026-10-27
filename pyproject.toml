@@ -1,8 +1,9 @@
 [project]
 name = "somedayx"
-version = "1.0.0"
+version = "1.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "mcp>=2.3,<3",
     "playwright>=1.64.1",
     "sqlite-vec>=0.1.9",
 ]

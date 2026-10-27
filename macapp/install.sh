@@ -87,6 +87,13 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BUILD/SomedayX" "$APP/Contents/MacOS/SomedayX"
 cp "$BUILD/SomedayX.icns" "$APP/Contents/Resources/SomedayX.icns"
+# What AI apps launch to search your saves over MCP (read-only; off until
+# you allow it in the menu: AI Apps (MCP) → Let AI Apps Search My Saves).
+cat > "$APP/Contents/Resources/somedayx-mcp" <<LAUNCH
+#!/bin/bash
+exec "$UV" run --quiet --directory "$ROOT" python -m somedayx mcp
+LAUNCH
+chmod +x "$APP/Contents/Resources/somedayx-mcp"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -97,8 +104,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key><string>SomedayX</string>
   <key>CFBundleIconFile</key><string>SomedayX</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleShortVersionString</key><string>1.1</string>
+  <key>CFBundleVersion</key><string>2</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
   <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps</title>
+<meta name="description" content="SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here&#x27;s how to connect it.">
+<link rel="canonical" href="https://somedayx.com/guides/mcp/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="664a070a-3b3c-4188-a8e2-406e4eaaa0fb"></script>
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/icon-32.png" sizes="32x32"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SomedayX">
+<meta property="og:title" content="X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps">
+<meta property="og:description" content="SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here&#x27;s how to connect it.">
+<meta property="og:url" content="https://somedayx.com/guides/mcp/">
+<meta property="og:image" content="https://somedayx.com/img/og/guide-mcp.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="article:modified_time" content="2026-10-27">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps">
+<meta name="twitter:description" content="SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here&#x27;s how to connect it.">
+<meta name="twitter:image" content="https://somedayx.com/img/og/guide-mcp.png">
+<meta name="twitter:creator" content="@priyankmmehta">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Article", "headline": "X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps", "description": "SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here's how to connect it.", "image": "https://somedayx.com/img/og/guide-mcp.png", "datePublished": "2026-10-27", "dateModified": "2026-10-27", "mainEntityOfPage": "https://somedayx.com/guides/mcp/", "author": {"@type": "Person", "name": "Priyank Mehta", "url": "https://x.com/priyankmmehta"}, "publisher": {"@id": "https://somedayx.com/#site"}, "about": {"@id": "https://somedayx.com/#app"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "SomedayX", "item": "https://somedayx.com/"}, {"@type": "ListItem", "position": 2, "name": "Guide", "item": "https://somedayx.com/guides/mcp/"}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is there an MCP server for X (Twitter) bookmarks?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. SomedayX includes a free, open-source, read-only MCP server that lets Claude Desktop, Claude Code, Cursor and other MCP apps search your X bookmarks and likes by meaning, on your Mac."}}, {"@type": "Question", "name": "Does it need the X API or an API key?", "acceptedAnswer": {"@type": "Answer", "text": "No. SomedayX reads your saves into a local library on your Mac, and the MCP server searches that library. No X API, no API key, no account."}}, {"@type": "Question", "name": "Does the SomedayX app need to be open?", "acceptedAnswer": {"@type": "Answer", "text": "No. Your AI app starts the server when it needs it. SomedayX keeps your library up to date when it syncs."}}, {"@type": "Question", "name": "Can my AI app change or post anything?", "acceptedAnswer": {"@type": "Answer", "text": "No. Every tool is read-only, and the server opens the database read-only."}}]}]}</script>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #000; color: #e7e9ea; font: 17px/1.65 -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 70px; }
+  a { color: #1d9bf0; }
+  .logo { display: inline-flex; gap: 10px; align-items: center; font-weight: 800; text-decoration: none; color: #e7e9ea; }
+  .logo img { width: 28px; height: 28px; }
+  .meta { margin-top: 34px; color: #71767b; font-size: 14px; }
+  h1 { font-size: clamp(30px, 6vw, 44px); letter-spacing: -.03em; line-height: 1.1; margin-top: 8px; }
+  h2 { font-size: 25px; letter-spacing: -.02em; line-height: 1.25; margin-top: 44px; }
+  h3 { font-size: 19px; margin-top: 28px; }
+  p, li { color: #c4c8cc; } p { margin-top: 14px; }
+  ul, ol { margin-top: 12px; padding-left: 22px; } li { margin-top: 6px; }
+  strong { color: #e7e9ea; }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: #16181c; padding: 2px 6px; border-radius: 6px; }
+  .answer { margin-top: 20px; padding: 16px 18px; border-left: 3px solid #1d9bf0; background: #0b0b0c; border-radius: 0 12px 12px 0; }
+  .answer p:first-child { margin-top: 0; }
+  .scroll { overflow-x: auto; margin-top: 18px; border: 1px solid #2f3336; border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #2f3336; vertical-align: top; color: #c4c8cc; }
+  th { color: #e7e9ea; background: #0b0b0c; } tr:last-child td { border-bottom: 0; }
+  details { margin-top: 10px; border: 1px solid #2f3336; border-radius: 12px; padding: 12px 16px; }
+  summary { cursor: pointer; font-weight: 700; color: #e7e9ea; }
+  .btn { display: inline-block; margin-top: 22px; padding: 13px 22px; border-radius: 999px; font-weight: 700;
+         background: #e7e9ea; color: #000; text-decoration: none; }
+  .note { font-size: 14px; color: #71767b; }
+  .more { margin-top: 50px; padding-top: 20px; border-top: 1px solid #2f3336; color: #71767b; font-size: 14px; }
+  .more a { margin-right: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="logo" href="/"><img src="/icon-192.png" alt="">SomedayX</a>
+  <div class="meta">Guide · Updated <time datetime="2026-10-27">27 Oct 2026</time> · by <a href="https://x.com/priyankmmehta">Priyank Mehta</a></div>
+<h1>Search your X bookmarks from Claude, Cursor and other AI apps (MCP)</h1>
+
+  <div class="answer">
+    <p><strong>Short answer:</strong> install <a href="/">SomedayX</a> (free, Mac), click its menu bar icon → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, then choose <strong>Connect Claude Desktop</strong>, <strong>Connect Cursor</strong> or <strong>Copy Claude Code Command</strong>. Your AI app can then search everything you've bookmarked or liked on X, by meaning and inside screenshots. It's read-only and off until you turn it on.</p>
+  </div>
+
+  <h2>What you can ask</h2>
+  <ul>
+    <li>"Find the posts I saved about pricing and summarise the advice."</li>
+    <li>"What did I bookmark about AI agents this month?"</li>
+    <li>"Pull every screenshot I saved about Postgres tuning and list the tips."</li>
+    <li>"Who do I save the most, and what do they post about?"</li>
+  </ul>
+
+  <h2>Set it up</h2>
+  <ol>
+    <li><a href="/#install">Install SomedayX</a> and let it finish its first sync.</li>
+    <li>Click the SomedayX icon in the menu bar → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, and confirm.</li>
+    <li>In the same menu:
+      <ul>
+        <li><strong>Connect Claude Desktop</strong> or <strong>Connect Cursor</strong>: SomedayX adds itself to that app's MCP settings (keeping a backup). Quit and reopen the app.</li>
+        <li><strong>Copy Claude Code Command</strong>, then paste it in your terminal:<br><code>claude mcp add --scope user somedayx -- ~/Applications/SomedayX.app/Contents/Resources/somedayx-mcp</code></li>
+        <li><strong>Copy Setup for Other Apps</strong>: the JSON config for any app that supports local (stdio) MCP servers.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Tools it gives your AI app</h2>
+  <div class="scroll"><table>
+    <tr><th>Tool</th><th>What it does</th></tr>
+    <tr><td><code>search_saves</code></td><td>Search by meaning and keywords, including text in images and full X Articles. Supports <code>from:</code>, <code>is:bookmark</code>, <code>is:like</code>, <code>has:image</code>, <code>year:</code>, <code>since:</code>, <code>until:</code>.</td></tr>
+    <tr><td><code>recent_saves</code></td><td>What you saved lately, with the same filters.</td></tr>
+    <tr><td><code>get_post</code></td><td>One post in full: text, image text, quoted post, X Article text, links.</td></tr>
+    <tr><td><code>library_overview</code></td><td>How many saves, the date range, your most-saved authors and topics.</td></tr>
+  </table></div>
+
+  <h2>Privacy</h2>
+  <ul>
+    <li><strong>Off by default.</strong> Until you turn it on, the server refuses every request. Turn it off in the same menu and it stops answering at once.</li>
+    <li><strong>Read-only.</strong> It opens your library read-only and can't sync, post, like, or touch your X login.</li>
+    <li><strong>Your AI app sees what it asks for.</strong> Cloud-based apps (Claude, Cursor) send the posts they read to their servers to answer you. Your saves stay on your Mac unless you connect one.</li>
+    <li><strong>Works without the app open.</strong> It shares SomedayX's on-device search model rather than loading a second copy, and the model frees its memory when idle.</li>
+  </ul>
+
+  <h2>FAQ</h2>
+  <details><summary>Is there an MCP server for X (Twitter) bookmarks?</summary><p>Yes. SomedayX includes a free, open-source, read-only MCP server that lets Claude Desktop, Claude Code, Cursor and other MCP apps search your X bookmarks and likes by meaning, on your Mac.</p></details>
+  <details><summary>Does it need the X API or an API key?</summary><p>No. SomedayX reads your saves into a local library on your Mac, and the MCP server searches that library. No X API, no API key, no account.</p></details>
+  <details><summary>Does the SomedayX app need to be open?</summary><p>No. Your AI app starts the server when it needs it. SomedayX keeps your library up to date when it syncs.</p></details>
+  <details><summary>Can my AI app change or post anything?</summary><p>No. Every tool is read-only, and the server opens the database read-only.</p></details>
+
+  <a class="btn" href="/" data-umami-event="mcp-guide-cta">Get SomedayX, free →</a>
+  <div class="more">More: <a href="/">SomedayX home</a><a href='/compare/x-bookmark-managers/'>SomedayX vs Dewey vs Tweetsmash vs X search</a><a href='/guides/search-x-bookmarks/'>How to search your X (Twitter) bookmarks</a><a href="https://github.com/priyank-saarthios-ai/somedayx">Source on GitHub</a></div>
+</div>
+</body>
+</html>

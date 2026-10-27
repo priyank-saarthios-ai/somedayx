@@ -1,0 +1,61 @@
+<!--
+path: guides/mcp
+crumb: Guide
+kicker: Guide · MCP
+card: Search your X bookmarks from Claude, Cursor and other AI apps
+title: X (Twitter) bookmarks MCP server: search your saves from Claude, Cursor and other AI apps
+description: SomedayX includes a free, read-only MCP server so Claude Desktop, Claude Code, Cursor and other AI apps can search your X bookmarks and likes by meaning. Off by default; here's how to connect it.
+published: 2026-10-27
+updated: 2026-10-27
+-->
+  <h1>Search your X bookmarks from Claude, Cursor and other AI apps (MCP)</h1>
+
+  <div class="answer">
+    <p><strong>Short answer:</strong> install <a href="/">SomedayX</a> (free, Mac), click its menu bar icon → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, then choose <strong>Connect Claude Desktop</strong>, <strong>Connect Cursor</strong> or <strong>Copy Claude Code Command</strong>. Your AI app can then search everything you've bookmarked or liked on X, by meaning and inside screenshots. It's read-only and off until you turn it on.</p>
+  </div>
+
+  <h2>What you can ask</h2>
+  <ul>
+    <li>"Find the posts I saved about pricing and summarise the advice."</li>
+    <li>"What did I bookmark about AI agents this month?"</li>
+    <li>"Pull every screenshot I saved about Postgres tuning and list the tips."</li>
+    <li>"Who do I save the most, and what do they post about?"</li>
+  </ul>
+
+  <h2>Set it up</h2>
+  <ol>
+    <li><a href="/#install">Install SomedayX</a> and let it finish its first sync.</li>
+    <li>Click the SomedayX icon in the menu bar → <strong>AI Apps (MCP)</strong> → <strong>Let AI Apps Search My Saves</strong>, and confirm.</li>
+    <li>In the same menu:
+      <ul>
+        <li><strong>Connect Claude Desktop</strong> or <strong>Connect Cursor</strong>: SomedayX adds itself to that app's MCP settings (keeping a backup). Quit and reopen the app.</li>
+        <li><strong>Copy Claude Code Command</strong>, then paste it in your terminal:<br><code>claude mcp add --scope user somedayx -- ~/Applications/SomedayX.app/Contents/Resources/somedayx-mcp</code></li>
+        <li><strong>Copy Setup for Other Apps</strong>: the JSON config for any app that supports local (stdio) MCP servers.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Tools it gives your AI app</h2>
+  <div class="scroll"><table>
+    <tr><th>Tool</th><th>What it does</th></tr>
+    <tr><td><code>search_saves</code></td><td>Search by meaning and keywords, including text in images and full X Articles. Supports <code>from:</code>, <code>is:bookmark</code>, <code>is:like</code>, <code>has:image</code>, <code>year:</code>, <code>since:</code>, <code>until:</code>.</td></tr>
+    <tr><td><code>recent_saves</code></td><td>What you saved lately, with the same filters.</td></tr>
+    <tr><td><code>get_post</code></td><td>One post in full: text, image text, quoted post, X Article text, links.</td></tr>
+    <tr><td><code>library_overview</code></td><td>How many saves, the date range, your most-saved authors and topics.</td></tr>
+  </table></div>
+
+  <h2>Privacy</h2>
+  <ul>
+    <li><strong>Off by default.</strong> Until you turn it on, the server refuses every request. Turn it off in the same menu and it stops answering at once.</li>
+    <li><strong>Read-only.</strong> It opens your library read-only and can't sync, post, like, or touch your X login.</li>
+    <li><strong>Your AI app sees what it asks for.</strong> Cloud-based apps (Claude, Cursor) send the posts they read to their servers to answer you. Your saves stay on your Mac unless you connect one.</li>
+    <li><strong>Works without the app open.</strong> It shares SomedayX's on-device search model rather than loading a second copy, and the model frees its memory when idle.</li>
+  </ul>
+
+  <h2>FAQ</h2>
+  <details><summary>Is there an MCP server for X (Twitter) bookmarks?</summary><p>Yes. SomedayX includes a free, open-source, read-only MCP server that lets Claude Desktop, Claude Code, Cursor and other MCP apps search your X bookmarks and likes by meaning, on your Mac.</p></details>
+  <details><summary>Does it need the X API or an API key?</summary><p>No. SomedayX reads your saves into a local library on your Mac, and the MCP server searches that library. No X API, no API key, no account.</p></details>
+  <details><summary>Does the SomedayX app need to be open?</summary><p>No. Your AI app starts the server when it needs it. SomedayX keeps your library up to date when it syncs.</p></details>
+  <details><summary>Can my AI app change or post anything?</summary><p>No. Every tool is read-only, and the server opens the database read-only.</p></details>
+
+  <a class="btn" href="/" data-umami-event="mcp-guide-cta">Get SomedayX, free →</a>

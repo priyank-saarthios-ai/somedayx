@@ -14,6 +14,8 @@
                                         # from:handle is:bookmark has:video year:2025
     python -m somedayx fetch             # resolve links, quoted posts, download images
     python -m somedayx serve [port]      # web UI at http://127.0.0.1:8765
+    python -m somedayx mcp               # MCP server (stdio) for AI apps; read-only, needs the
+                                        # "Let AI apps search my saves" setting
 """
 
 import sys
@@ -116,8 +118,12 @@ def cmd_index(conn, everything: bool) -> None:
 
 def main() -> None:
     args = sys.argv[1:]
-    if not args or args[0] not in {"import", "stats", "search", "fetch", "models", "index", "write", "articles", "share", "serve", "sync", "collect"}:
+    if not args or args[0] not in {"import", "stats", "search", "fetch", "models", "index", "write", "articles", "share", "serve", "sync", "collect", "mcp"}:
         sys.exit(__doc__)
+    if args[0] == "mcp":  # before connect(): it only ever reads the database
+        from .mcp_server import main as mcp_main
+
+        return mcp_main()
     conn = connect()
     if args[0] == "import":
         cmd_import(conn)

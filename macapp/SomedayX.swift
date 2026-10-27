@@ -3291,6 +3291,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     let notifyItem = NSMenuItem(title: "Turn On Notifications…", action: #selector(turnOnNotifications), keyEquivalent: "")
     let optionTapItem = NSMenuItem(title: "Turn On Double-Tap ⌥…", action: #selector(openAccessibilitySettings), keyEquivalent: "")
     let writerItem = NSMenuItem(title: "Write tl;drs with Gemma", action: #selector(toggleWriter), keyEquivalent: "")
+    let mcpItem = NSMenuItem(title: "Let AI Apps Search My Saves", action: #selector(toggleMCP), keyEquivalent: "")
     var server: Process?
     var serverRestarts: [Date] = []
     var quitting = false
@@ -3606,6 +3607,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         menu.addItem(syncItem)
         menu.addItem(.separator())
         menu.addItem(writerItem)
+        let ai = NSMenu()
+        ai.addItem(mcpItem)
+        ai.addItem(.separator())
+        ai.addItem(NSMenuItem(title: "Connect Claude Desktop", action: #selector(connectClaudeDesktop), keyEquivalent: ""))
+        ai.addItem(NSMenuItem(title: "Connect Cursor", action: #selector(connectCursor), keyEquivalent: ""))
+        ai.addItem(NSMenuItem(title: "Copy Claude Code Command", action: #selector(copyClaudeCodeCommand), keyEquivalent: ""))
+        ai.addItem(NSMenuItem(title: "Copy Setup for Other Apps", action: #selector(copyMCPConfig), keyEquivalent: ""))
+        ai.addItem(.separator())
+        ai.addItem(NSMenuItem(title: "How It Works…", action: #selector(openMCPHelp), keyEquivalent: ""))
+        for item in ai.items { item.target = self }
+        let aiItem = NSMenuItem(title: "AI Apps (MCP)", action: nil, keyEquivalent: "")
+        aiItem.submenu = ai
+        menu.addItem(aiItem)
         menu.addItem(loginItem)
         menu.addItem(notifyItem)
         menu.addItem(optionTapItem)
@@ -3631,6 +3645,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
         writerItem.state = store.brain?.writer_on == true ? .on : .off
         writerItem.isEnabled = store.brain != nil && store.brain?.writer.busy != true
+        mcpItem.state = mcpOn ? .on : .off
         optionTapItem.isHidden = AXIsProcessTrusted()
         UNUserNotificationCenter.current().getNotificationSettings { s in
             DispatchQueue.main.async {
@@ -3908,6 +3923,108 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, @preco
     @objc func openNotificationSettings() {
         let id = Bundle.main.bundleIdentifier ?? ""
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(id)")!)
+    }
+
+    // MARK: AI apps (MCP)
+
+    /// What AI apps launch: a read-only MCP server that answers only while
+    /// sharing is on (settings.json "mcp", which it checks on every call).
+    var mcpLauncher: String { Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/somedayx-mcp").path }
+    var settingsURL: URL { dataDir.appendingPathComponent("settings.json") }
+
+    var mcpOn: Bool { (readJSON(settingsURL)?["mcp"] as? Bool) == true }
+
+    func setMCP(_ on: Bool) {
+        var s = readJSON(settingsURL) ?? [:]
+        s["mcp"] = on
+        try? JSONSerialization.data(withJSONObject: s).write(to: settingsURL, options: .atomic)
+    }
+
+    func readJSON(_ url: URL) -> [String: Any]? {
+        (try? Data(contentsOf: url)).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+    }
+
+    func alert(_ title: String, _ text: String, buttons: [String] = ["OK"]) -> Bool {
+        let a = NSAlert()
+        a.messageText = title
+        a.informativeText = text
+        buttons.forEach { a.addButton(withTitle: $0) }
+        NSApp.activate(ignoringOtherApps: true)
+        return a.runModal() == .alertFirstButtonReturn
+    }
+
+    /// Sharing is a privacy choice, so it's always asked, never assumed.
+    func confirmMCP() -> Bool {
+        if mcpOn { return true }
+        guard alert("Let AI apps search your saves?",
+                    "AI apps you connect, like Claude or Cursor, can then search and read your saved posts, and may send what they read to their own servers. SomedayX only reads: it can't post, sync or change anything. Turn it off anytime from this menu.",
+                    buttons: ["Allow", "Cancel"]) else { return false }
+        setMCP(true)
+        return true
+    }
+
+    @objc func toggleMCP() {
+        if mcpOn { setMCP(false) } else { _ = confirmMCP() }
+    }
+
+    @objc func connectClaudeDesktop() {
+        connectApp("Claude", FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/Claude/claude_desktop_config.json"))
+    }
+
+    @objc func connectCursor() {
+        connectApp("Cursor", FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".cursor/mcp.json"))
+    }
+
+    /// Adds (or updates) only the "somedayx" entry in the app's MCP config,
+    /// keeping a backup of the file as it was.
+    func connectApp(_ name: String, _ url: URL) {
+        guard confirmMCP() else { return }
+        let fm = FileManager.default
+        var config: [String: Any] = [:]
+        if fm.fileExists(atPath: url.path) {
+            guard let existing = readJSON(url) else {
+                _ = alert("Couldn't connect \(name)", "Its settings file isn't valid JSON, so SomedayX left it alone:\n\(url.path)")
+                return
+            }
+            config = existing
+            try? fm.removeItem(at: url.appendingPathExtension("somedayx-backup"))
+            try? fm.copyItem(at: url, to: url.appendingPathExtension("somedayx-backup"))
+        }
+        var servers = config["mcpServers"] as? [String: Any] ?? [:]
+        servers["somedayx"] = ["command": mcpLauncher, "args": [String]()]
+        config["mcpServers"] = servers
+        do {
+            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONSerialization.data(withJSONObject: config, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+                .write(to: url, options: .atomic)
+            _ = alert("Connected to \(name)", "Quit and reopen \(name), then ask it something like “find the posts I saved about pricing”.")
+        } catch {
+            _ = alert("Couldn't connect \(name)", error.localizedDescription)
+        }
+    }
+
+    @objc func copyClaudeCodeCommand() {
+        guard confirmMCP() else { return }
+        copy("claude mcp add --scope user somedayx -- '\(mcpLauncher)'")
+        _ = alert("Copied", "Paste it in your terminal to add SomedayX to Claude Code.")
+    }
+
+    @objc func copyMCPConfig() {
+        guard confirmMCP() else { return }
+        let config = ["mcpServers": ["somedayx": ["command": mcpLauncher, "args": [String]()]]]
+        guard let data = try? JSONSerialization.data(withJSONObject: config, options: [.prettyPrinted, .withoutEscapingSlashes]) else { return }
+        copy(String(decoding: data, as: UTF8.self))
+        _ = alert("Copied", "Paste it into your AI app's MCP settings. SomedayX runs as a local (stdio) MCP server.")
+    }
+
+    func copy(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    @objc func openMCPHelp() {
+        NSWorkspace.shared.open(URL(string: "https://somedayx.com/guides/mcp/")!)
     }
 
     // MARK: Login item

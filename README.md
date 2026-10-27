@@ -45,6 +45,28 @@ Search understands X-style operators: `from:handle`, `is:bookmark`, `is:like`, `
 
 SomedayX syncs every night at 3 AM (and whenever you press sync). Right-click the menu bar icon for sync, settings and logs.
 
+## Use it from AI apps (MCP)
+
+SomedayX includes an [MCP](https://modelcontextprotocol.io) server, so Claude Desktop, Claude Code, Cursor and other MCP apps can search your saves: *"find the posts I saved about pricing and summarise the advice"*.
+
+1. Click the SomedayX menu bar icon → **AI Apps (MCP)** → **Let AI Apps Search My Saves**. It's off until you turn it on.
+2. In the same menu, choose **Connect Claude Desktop** or **Connect Cursor** (then reopen that app), or **Copy Claude Code Command**, which copies:
+   ```
+   claude mcp add --scope user somedayx -- ~/Applications/SomedayX.app/Contents/Resources/somedayx-mcp
+   ```
+   For other apps, **Copy Setup for Other Apps** copies the JSON config. It's a local stdio server.
+
+| Tool | What it does |
+|---|---|
+| `search_saves` | Search by meaning and keywords, including text in images and X Articles. Takes the same operators as the app (`from:`, `is:like`, `has:image`, `year:`…) |
+| `recent_saves` | What you saved lately, with the same filters |
+| `get_post` | One post in full: text, image text, quoted post, X Article, links |
+| `library_overview` | Counts, date range, top authors and topics |
+
+It's read-only: it opens the database read-only and never syncs, posts, or touches your X session. It works whether or not the SomedayX app is open, and shares the app's search model instead of loading a second copy. Turn sharing off in the same menu and every request is refused.
+
+**Privacy note:** an AI app you connect reads your saved posts to answer you, and cloud-based apps send that text to their servers. Your saves stay on your Mac unless you connect one.
+
 ## How it works
 
 1. **Collect.** Playwright drives a Chrome window logged in to *your* X account and reads your Bookmarks and Likes timelines, the same data the X website loads for you. It's read-only: it never posts, likes, follows or clicks anything on a post.
@@ -59,6 +81,7 @@ The menu bar app is Swift/SwiftUI; the engine is Python (run with `uv`). Everyth
 - Your saves, images, models and search index live in `~/Library/Application Support/SomedayX`, readable only by your macOS user.
 - The only network traffic is to X (to read your saves), to the pages your saved links point to (for their titles), and a one-time model download from Hugging Face. If an identical copy of the model is already on your Mac, SomedayX clones it instead of downloading.
 - No analytics, no telemetry, no accounts, no servers.
+- AI apps can read your saves only if you turn on **AI Apps (MCP)** and connect one; cloud-based AI apps then send what they read to their servers. Off by default.
 - The local search server only answers SomedayX itself: it checks a private access token and refuses requests from web pages.
 - That data folder contains a logged-in X browser session. Treat it like a password and don't share it.
 
