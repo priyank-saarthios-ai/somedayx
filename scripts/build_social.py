@@ -77,12 +77,18 @@ def home_card() -> str:
       .row.sel {{ background: rgba(29,155,240,.13); box-shadow: inset 4px 0 0 #1d9bf0; }}
       .av {{ width: 40px; height: 40px; border-radius: 50%; flex: none; }}
       .n {{ font-size: 16px; font-weight: 700; }} .t {{ font-size: 17px; color: #d6d9db; margin-top: 3px; }}
+      .ai {{ display: inline-flex; gap: 10px; align-items: center; margin-top: 26px; padding: 9px 16px 9px 9px; border-radius: 999px;
+            font-size: 19px; font-weight: 700; color: #e7e9ea; border: 2px solid transparent;
+            background: linear-gradient(#000, #000) padding-box, linear-gradient(90deg, #1d9bf0, #7856ff, #f91880) border-box; }}
+      .ai .new {{ font-size: 13px; font-weight: 900; letter-spacing: 1px; padding: 4px 9px; border-radius: 999px;
+                 background: linear-gradient(90deg, #1d9bf0, #7856ff); color: #fff; }}
     </style>
     <div class='frame'>
       <div>
         <div class='logo'>{LOGO_SVG.format(bg='#fff', fg='#000')}SomedayX</div>
         <h1>For the X posts you'll read <span>someday.</span></h1>
         <div class='sub'>Search your X bookmarks &amp; likes by meaning, even inside images. 100% on your Mac.</div>
+        <div class='ai'><span class='new'>NEW</span>Works with Claude, ChatGPT desktop &amp; Codex</div>
       </div>
       <div class='panel'><div class='bar'>🔍 that thread about pricing</div>{row_html}</div>
       <div class='url'>somedayx.com · free &amp; open source</div>

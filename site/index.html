@@ -172,6 +172,32 @@
   details[open] summary::after { content: "–"; }
   details p { color: var(--muted); margin-top: 10px; max-width: 46em; }
 
+  /* AI apps */
+  .aipill { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; max-width: 100%;
+            padding: 8px 14px 8px 8px; border-radius: 999px; font-size: 14.5px; color: var(--text);
+            background: linear-gradient(#000, #000) padding-box, linear-gradient(90deg, var(--blue), #7856ff, #f91880) border-box;
+            border: 1.5px solid transparent; transition: transform .2s; }
+  .aipill:hover { transform: translateY(-1px); }
+  .aipill .new { flex: none; font-size: 11px; font-weight: 900; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px;
+                 background: linear-gradient(90deg, var(--blue), #7856ff); color: #fff; }
+  .aipill b { font-weight: 800; }
+  .apps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+  .apps span { padding: 7px 13px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+  .chat { background: #0b0b0c; border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 14px;
+          box-shadow: 0 30px 80px rgba(120,86,255,.18); align-self: start; }
+  .chat .you { justify-self: end; max-width: 85%; background: var(--blue); color: #fff; padding: 10px 14px; border-radius: 16px 16px 4px 16px; font-size: 15px; }
+  .chat .tool { justify-self: start; font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted);
+                padding: 5px 10px; border: 1px dashed var(--line); border-radius: 8px; }
+  .chat .tool b { color: var(--blue); font-weight: 600; }
+  .chat .ai { color: #d6d9db; font-size: 15px; }
+  .chat .ai p + p { margin-top: 8px; }
+  .chat .src { display: grid; gap: 6px; margin-top: 10px; }
+  .chat .src span { font-size: 13px; color: var(--muted); padding: 7px 10px; background: var(--raised); border-radius: 10px; }
+  .chat .src b { color: var(--text); }
+  .note { color: var(--muted); font-size: 14.5px; margin-top: 18px; }
+  .note b { color: var(--text); }
+  .more-link { display: inline-block; margin-top: 18px; color: var(--blue); font-weight: 700; }
+
   footer { padding: 50px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid #111; }
   footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
   footer a { color: var(--text); }
@@ -201,6 +227,7 @@
     <a class="logo" href="#"><svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff"/><path d="M30 18h40v66L50 70 30 84z" fill="#000"/></svg>SomedayX</a>
     <div class="navlinks">
       <a class="hide" href="#how">How it works</a>
+      <a class="hide" href="#ai">AI apps</a>
       <a class="hide" href="#wrapped">Wrapped</a>
       <a href="#install">Install</a>
       <a class="launch" href="https://github.com/priyank-saarthios-ai/somedayx" data-umami-event="github" data-umami-event-place="nav">GitHub</a>
@@ -221,6 +248,7 @@
         <a class="btn ghost pre" href="#how">See how it works</a>
       </div>
       <p class="fine">Free &amp; open source · 100% on your Mac · no account, no cloud, no tracking</p>
+      <a class="aipill" href="#ai" data-umami-event="ai-pill"><span class="new">NEW</span><span>Works with <b>Claude, ChatGPT desktop, Codex &amp; Cursor</b> →</span></a>
     </div>
 
     <div class="stage" aria-hidden="true">
@@ -246,6 +274,37 @@
       <div class="card"><div class="em">⌥⌥</div><h3>Double-tap Option, anywhere</h3><p>A Spotlight-style panel opens over any app. Type "that thread about pricing" and it's there, even if the post never used those words.</p></div>
       <div class="card"><div class="em">🖼️</div><h3>Searches inside images</h3><p>"screenshot of a dashboard", "meme about startups". It finds posts by what's in the picture and reads the text in screenshots.</p></div>
       <div class="card"><div class="em">📰</div><h3>X Articles, fully read</h3><p>Long-form X Articles are searchable word for word, not just their titles. Filter with <code>has:article</code>, <code>from:</code>, <code>year:</code> and more.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="ai">
+  <div class="wrap two">
+    <div>
+      <div class="kicker">Works with your AI apps</div>
+      <h2>Ask your AI about<br>your bookmarks.</h2>
+      <p class="sub">Claude, ChatGPT and Codex can search everything you've saved on X: by meaning, inside screenshots, across years. Ask for a summary, a reading list or that one post you half remember.</p>
+      <div class="apps"><span>Claude Desktop</span><span>Claude Code</span><span>ChatGPT desktop app</span><span>Codex</span><span>Cursor</span><span>any MCP app</span></div>
+      <ul class="check">
+        <li>One click to connect, from the SomedayX menu bar icon.</li>
+        <li>Off until you turn it on. Read-only: it can't post, sync or change anything.</li>
+        <li>Works even when SomedayX is closed, using the same on-device search.</li>
+      </ul>
+      <p class="note"><b>ChatGPT:</b> the desktop app for Mac and Codex, not chatgpt.com in a browser. Apps you connect read the posts they find, and cloud apps send that text to their servers.</p>
+      <a class="more-link" href="/guides/mcp/" data-umami-event="ai-guide">How to connect your AI app →</a>
+    </div>
+    <div class="chat" aria-label="Example: asking an AI app about your saved posts">
+      <div class="you">What advice have I saved about raising prices?</div>
+      <div class="tool">🔖 <b>somedayx</b> · search_saves("raising prices")</div>
+      <div class="ai">
+        <p>You saved 7 posts on this, from 2020 to this year. The common thread:</p>
+        <p>1. Raise prices for new customers first.<br>2. Give existing customers months of notice, with the reasons.<br>3. Small yearly increases beat one big jump.</p>
+        <div class="src">
+          <span><b>A SaaS newsletter</b> · How to price your SaaS product</span>
+          <span><b>A founder you follow</b> · We raise prices 7% every year. Here's the letter.</span>
+          <span><b>Screenshot you saved</b> · Pricing page teardown</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -279,6 +338,7 @@
         <li>No accounts, no servers, no analytics. Read the code: it's all on GitHub.</li>
         <li>Read-only. It never posts, likes or follows anything.</li>
         <li>Everything lives in one folder on your Mac, readable only by you.</li>
+        <li>AI apps see your saves only if you turn that on and connect one. Off by default.</li>
       </ul>
     </div>
     <div id="install">

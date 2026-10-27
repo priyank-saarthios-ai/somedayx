@@ -7,6 +7,7 @@
 - **Double-tap ⌥ anywhere** to open search. Type what you remember ("that thread about pricing") and SomedayX finds it, even when the words don't match.
 - **Search inside images.** "screenshot of a dashboard" finds posts by what's *in* the picture, and text in screenshots and memes is searchable too.
 - **X Articles included.** The full text of saved X Articles is searchable, not just their titles.
+- **Works with your AI apps.** Ask Claude, the ChatGPT desktop app, Codex or Cursor about your saves over [MCP](#use-it-from-ai-apps-mcp): read-only, off until you turn it on.
 - **SomedayX Wrapped.** A shareable card that roasts your saving habits ("🤖 AI agent maximalist · 549 videos in watch later").
 - **Your saves, your Mac.** Google's Gemma models run locally through llama.cpp. Nothing you save is ever sent anywhere.
 
