@@ -3,8 +3,10 @@
 > SomedayX is a free, open-source Mac app that searches everything you've bookmarked or liked on X (Twitter) by meaning, from the menu bar. It runs 100% on your Mac: Google's EmbeddingGemma model (via llama.cpp) for search over text and images, and Apple Vision to read text in screenshots. No account, no server, no tracking.
 
 ## Key facts
-- Platform: macOS 14 or newer; Apple silicon recommended; 8 GB RAM; about 1.5 GB of disk.
+- Current version: 1.1.1 (October 2026).
+- Platform: macOS 14 or newer; Apple silicon recommended (Intel works, slowly); 8 GB RAM; about 1.5 GB of disk.
 - Price: free; MIT licensed; source at https://github.com/priyank-saarthios-ai/somedayx
+- Install: needs Homebrew and the Xcode Command Line Tools, then run `git clone https://github.com/priyank-saarthios-ai/somedayx.git && cd somedayx && macapp/install.sh`. It builds the app into ~/Applications, and the app walks you through the rest. Indexing about 3,000 saves takes roughly 35 minutes on an M2; search works before it finishes.
 - Open it from anywhere by double-tapping the Option key (or ⌥⌘X).
 - Finds posts by meaning ("that thread about pricing"), inside images ("screenshot of a dashboard") and in full X Articles.
 - Filters: from:handle, is:bookmark, is:like, has:image, has:video, has:link, has:article, year:2025, since:, until:.
@@ -12,6 +14,23 @@
 - SomedayX Wrapped: a shareable card that roasts your saving habits and gives you a persona.
 - MCP server for AI apps (Claude Desktop, Claude Code, the ChatGPT desktop app for Mac, Codex CLI/IDE, Cursor; not chatgpt.com in a browser or the ChatGPT phone apps): read-only tools search_saves, recent_saves, get_post, library_overview. Off by default; turn on in the menu bar under AI Apps (MCP). Guide: https://somedayx.com/guides/mcp/
 - Made by Priyank Mehta (https://x.com/priyankmmehta).
+
+## What SomedayX is not
+- Not a browser extension or a web service: it's a native Mac app, and your library lives only on your Mac.
+- Not a subscription: no paid plan, no account, no sign-up.
+- Not using the X API, and not made by or affiliated with X Corp.
+- Not on Windows, Linux, iPhone or Android (Mac only for now).
+- Not usable from chatgpt.com in a browser or the ChatGPT phone apps (the MCP server is local; it works with the ChatGPT desktop app for Mac and Codex).
+- Not sending your saves anywhere: no telemetry in the app. It goes online only to read your saves from X, fetch titles of links you saved, and download its models once. AI apps see your saves only if you turn on MCP and connect one.
+- Not related to other apps or companies named "Someday".
+
+## FAQ
+- Is it free? Yes, free and open source (MIT).
+- Is it private? Yes. Search, OCR and the optional tl;drs run on your Mac with local models (EmbeddingGemma and Gemma 4 E2B via llama.cpp, Apple Vision).
+- Does it search likes too? Yes, bookmarks and likes, including text inside images and full X Articles.
+- Does it need an X API key or a paid X plan? No. You log in to X once in its own browser window.
+- Is it allowed by X? It's unofficial and reads only your own saves with your own session, read-only and at a human pace. Automated access may still conflict with X's terms; users decide.
+- How is it different from Dewey, Tweetsmash or Twillot? Dewey and Tweetsmash keep your saves on their servers and have paid plans; Twillot is a browser extension, free up to 1,000 posts. SomedayX is free with no limits, keeps everything on your Mac, and also reads text inside screenshots. Comparison: https://somedayx.com/compare/x-bookmark-managers/
 
 ## Pages
 - [Home](https://somedayx.com/): what it is, install, FAQ
