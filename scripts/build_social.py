@@ -487,7 +487,7 @@ def text_files() -> None:
 - Does it search likes too? Yes, bookmarks and likes, including text inside images and full X Articles.
 - Does it need an X API key or a paid X plan? No. You log in to X once in its own browser window.
 - Is it allowed by X? It's unofficial and reads only your own saves with your own session, read-only and at a human pace. Automated access may still conflict with X's terms; users decide.
-- How is it different from Dewey, Tweetsmash or Twillot? Dewey and Tweetsmash keep your saves on their servers and have paid plans; Twillot is a browser extension, free up to 1,000 posts. SomedayX is free with no limits, keeps everything on your Mac, and also reads text inside screenshots. Comparison: {BASE}/compare/x-bookmark-managers/
+- How is it different from Dewey, Tweetsmash or Twillot? Dewey and Tweetsmash keep your saves on their servers and have paid plans; Twillot is a browser extension, free up to 100 saved items. SomedayX is free with no limits, keeps everything on your Mac, and also reads text inside screenshots. Comparison: {BASE}/compare/x-bookmark-managers/
 
 ## Pages
 - [Home]({BASE}/): what it is, install, FAQ
